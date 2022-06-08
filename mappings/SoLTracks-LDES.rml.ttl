@@ -1,0 +1,118 @@
+@prefix rr: <http://www.w3.org/ns/r2rml#> .
+@prefix ex: <http://example.com/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rml: <http://semweb.mmlab.be/ns/rml#> .
+@prefix ql: <http://semweb.mmlab.be/ns/ql#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix csvw: <http://www.w3.org/ns/csvw#> .
+@prefix rdfs: <https://www.w3.org/2000/01/rdf-schema#> .
+@prefix comp: <http://semweb.mmlab.be/ns/rml-compression#> .
+@prefix rmlt: <http://semweb.mmlab.be/ns/rml-target#> .
+@prefix formats: <http://www.w3.org/ns/formats/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix fnml: <http://semweb.mmlab.be/ns/fnml#> .
+@prefix fno: <https://w3id.org/function/ontology#> .
+@prefix grel: <http://users.ugent.be/~bjdmeest/function/grel.ttl#> .
+@prefix tree: <https://w3id.org/tree#> .
+@prefix ldes: <https://w3id.org/ldes#> .
+@prefix td: <https://www.w3.org/2019/wot/td#> .
+@prefix htv: <http://www.w3.org/2011/http#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix idlab-fn: <http://example.com/idlab/function/> .
+@prefix era: <http://data.europa.eu/949/> .
+
+@base <http://era-mappings.eu/> .
+
+<#SoLTracksTarget> a rmlt:LogicalTarget;
+    rmlt:target [ 
+      a void:Dataset;
+      void:dataDump <file://${OUTPUT_FILE_PATH}>;
+    ];
+    rmlt:serialization formats:JSON-LD.
+
+<#TriplesMapSoLTracks> a rr:TriplesMap;
+    rml:logicalSource [ 
+      rml:source "${RINF_SOURCE}";
+      rml:referenceFormulation ql:XPath;
+      rml:iterator "/RINFData//SOLTrack"
+    ];
+    
+    rr:subjectMap [ 
+      fnml:functionValue [
+        rr:predicateObjectMap [
+        rr:predicate fno:executes ;
+        rr:objectMap [ rr:constant idlab-fn:generateUniqueIRI ] ] ;
+        # IRI template
+        rr:predicateObjectMap [
+          rr:predicate idlab-fn:iri ;
+          rr:objectMap [ 
+            rr:template "http://data.europa.eu/949/functionalInfrastructure/tracks/{ancestor::SectionOfLine/SOLLineIdentification/@Value}_{ancestor::SectionOfLine/SOLOPStart/@Value}_{SOLTrackIdentification/@Value}_{ancestor::SectionOfLine/SOLOPEnd/@Value}" 
+          ]
+        ];
+        # Flag to indicate if the properties are unique on their own
+        rr:predicateObjectMap [
+          rr:predicate idlab-fn:unique ;
+          rr:objectMap [ rr:constant "false"; rr:termType xsd:boolean; ]
+        ];
+        rr:predicateObjectMap [
+          rr:predicate idlab-fn:watchedProperty ;
+          rr:objectMap [ rml:reference "('IPP_MaxSpeed=' || SOLTrackParameter[@ID='IPP_MaxSpeed']/@Value || '&ILL_Gauging=' || SOLTrackParameter[@ID='ILL_Gauging']/@Value || '&ITP_CantDeficiency=' || SOLTrackParameter[@ID='ITP_CantDeficiency']/@Value)"; ]
+        ];
+        # Directory path where the state for this function is/will be stored
+        rr:predicateObjectMap [
+          rr:predicate idlab-fn:state ;
+          rr:objectMap [ rr:constant "./ldes-state/${COUNTRY}"; rr:termType xsd:string; ]
+        ];
+      ];
+      rr:termType rr:IRI;
+      rr:class era:Track;
+      rml:logicalTarget <#SoLTracksTarget>;
+  ]; 
+
+  rr:predicateObjectMap [
+    rr:predicate dct:isVersionOf; 
+    rr:objectMap [ rr:template "http://data.europa.eu/949/functionalInfrastructure/tracks/{ancestor::SectionOfLine/SOLLineIdentification/@Value}_{ancestor::SectionOfLine/SOLOPStart/@Value}_{SOLTrackIdentification/@Value}_{ancestor::SectionOfLine/SOLOPEnd/@Value}"; ]
+  ];
+
+  rr:predicateObjectMap [
+    rr:predicate dct:modified; 
+    rr:objectMap [ 
+      rml:reference "current-dateTime()";
+      rr:datatype xsd:dateTime
+    ]
+  ];
+
+  rr:predicateObjectMap [
+    rr:predicate rdfs:label; 
+    rr:objectMap [ rml:reference "(ancestor::SectionOfLine/SOLLineIdentification/@Value || '_' || ancestor::SectionOfLine/SOLOPStart/@Value || '_' || SOLTrackIdentification/@Value || '_' || ancestor::SectionOfLine/SOLOPEnd/@Value)"; ]
+  ];
+
+  rr:predicateObjectMap [ # 1.1.1.0.0.1
+    rr:predicate era:trackId; 
+    rr:objectMap [ rml:reference "SOLTrackIdentification/@Value"; ]
+  ];
+
+  rr:predicateObjectMap [ # 1.1.1.1.2.5
+    rr:predicate era:maximumPermittedSpeed;
+    rr:objectMap [
+      rml:reference "SOLTrackParameter[@ID='IPP_MaxSpeed']/@Value";
+      rr:datatype xsd:integer
+    ]
+  ];
+
+  rr:predicateObjectMap [ # 1.1.1.1.3.1.1
+    rr:predicate era:gaugingProfile; 
+    rr:objectMap [
+      rr:template "http://data.europa.eu/949/concepts/gaugings/{SOLTrackParameter[@ID='ILL_Gauging']/@Value}";
+      rr:termType rr:IRI;
+    ]
+  ];
+
+  rr:predicateObjectMap [ # 1.1.1.1.4.2
+    rr:predicate era:cantDeficiency; 
+    rr:objectMap [
+      rml:reference "SOLTrackParameter[@ID='ITP_CantDeficiency']/@Value";
+    ]
+  ].
+
