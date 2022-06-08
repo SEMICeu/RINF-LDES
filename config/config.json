@@ -1,0 +1,43 @@
+{
+    "baseURI": "http://localhost:8080",
+    "fragmentSize": 50,
+    "countries": [
+        "AT", "BE", "BG", "CH", "CZ",
+        "DE", "DK", "EE", "EL", "ES",
+        "FI", "FR", "HR", "HU", "IT",
+        "LT", "LU", "LV", "NL", "NO",
+        "PL", "PT", "RO", "SE", "SK",
+        "UK"
+    ],
+    "@context": {
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "dct": "http://purl.org/dc/terms/",
+        "rdfs": "https://www.w3.org/2000/01/rdf-schema#",
+        "tree": "https://w3id.org/tree#",
+        "ldes": "https://w3id.org/ldes#",
+        "era": "http://data.europa.eu/949/",
+        "ldes:timestampPath": {
+            "@type": "@id"
+        },
+        "ldes:versionOfPath": {
+            "@type": "@id"
+        },
+        "tree:path": {
+            "@type": "@id"
+        },
+        "tree:value": {
+            "@type": "xsd:dateTime"
+        },
+        "dct:isVersionOf": {
+            "@type": "@id"
+        },
+        "dct:modified": {
+            "@type": "xsd:dateTime"
+        },
+        "era:maximumPermittedSpeed": {
+            "@type": "xsd:integer"
+        },
+        "ldesInfo": "@included",
+        "members": "@included"
+    }
+}
