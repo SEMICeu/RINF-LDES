@@ -1,0 +1,4 @@
+node_modules/
+data/RINF-XML/*
+output/*
+ldes-state/*

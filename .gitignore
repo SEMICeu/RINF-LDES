@@ -1,0 +1,6 @@
+node_modules
+data/RINF-XML
+mappings/*-SoLTracks-LDES.rml.ttl
+output
+ldes-state/*
+rmlmapper-5.0.0.jar
