@@ -26,21 +26,21 @@ async function run() {
     });
 
     // Run a full process for initializing all countries
-    await processSources({
+    /*await processSources({
         db,
         sources: config.countries,
         context: config['@context']
-    });
+    });*/
 
     // Schedule recurrent processing job
-    new CronJob({
-        //cronTime: '0 0 3 * * *',
-        cronTime: '*/15 * * * * *',
+    const job = new CronJob({
+        cronTime: '0 0 3 * * *', // Run every night at 03:00
+        //cronTime: '*/10 * * * * *',
         onTick: () => {
             processSources({
                 db,
-                //sources: config.countries,
-                sources: ['BE'],
+                sources: config.countries,
+                //sources: ['BE'],
                 context: config['@context']
             });
         },
