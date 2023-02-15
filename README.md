@@ -10,3 +10,6 @@ This repository provides a Node.js application, composed of different modules wh
 - **Time Series DB**: This module is responsible for storing transformed source data updates following an append-only log strategy. The implementation is done by relying on [MongoDB Time Series collections](https://www.mongodb.com/docs/manual/core/timeseries-collections/) feature. MongoDB is optimized for storing and serving JSON data (in this case JSON-LD) and Time Series collections further optimize indexing tasks for immutable and time-varying data objects, which are characteristics of LDES-based data. 
 
 - **Web Interface**: This module defines the Web HTTP interfaces that can be polled to request the different Linked Data fragments (or pages) that compose the LDES. For this pilot we define one LDES per member state with an available RINF-XML data source. In total we produce a Web interface for 26 different countries of the EU.
+
+Note: please run `RINF-pipeline.ttl` with the [js-runner](https://github.com/TREEcg/connector-architecture).
+

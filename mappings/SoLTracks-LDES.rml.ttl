@@ -21,6 +21,7 @@
 @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
 @prefix idlab-fn: <http://example.com/idlab/function/> .
 @prefix era: <http://data.europa.eu/949/> .
+@prefix void: <http://rdfs.org/ns/void#> .
 
 @base <http://era-mappings.eu/> .
 

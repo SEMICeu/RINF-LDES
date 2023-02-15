@@ -1,0 +1,70 @@
+@prefix js: <https://w3id.org/conn/js#> .
+@prefix fno: <https://w3id.org/function/ontology#> .
+@prefix fnom: <https://w3id.org/function/vocabulary/mapping#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix : <https://w3id.org/conn#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> owl:imports <https://raw.githubusercontent.com/ajuvercr/js-runner/4a417b156e3d2471ef91e7f8da0db6a93f0e0c1d/ontology.ttl>. 
+
+
+js:GetRINF a js:JsProcess;
+  js:file <./lib/Processor.js>;
+  js:function "getRINF";
+  js:location <./>;
+  js:mapping [
+    a fno:Mapping;
+    fno:parameterMapping [
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:countries;
+      fnom:implementationParameterPosition "0"^^xsd:int
+    ],[
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:dataOutput;
+      fnom:implementationParameterPosition "1"^^xsd:int
+    ],[
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:mappingOutput;
+      fnom:implementationParameterPosition "2"^^xsd:int
+    ]
+  ].
+
+[] a sh:NodeShape;
+  sh:targetClass js:GetRINF;
+  sh:property [
+    sh:class :WriterChannel;
+    sh:path js:dataOutput;
+    sh:name "Data output channel";
+  ], [
+    sh:class :WriterChannel;
+    sh:path js:mappingOutput;
+    sh:name "Data output channel";
+  ], [
+    sh:class :ReaderChannel;
+    sh:path js:countries;
+    sh:name "Stream containing all countries to process";
+  ].
+
+js:Print a js:JsProcess;
+  js:file <./lib/Processor.js>;
+  js:function "print";
+  js:location <./>;
+  js:module "true";
+  js:mapping [
+    a fno:Mapping;
+    fno:parameterMapping [
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:dataInput;
+      fnom:implementationParameterPosition "0"^^xsd:int
+    ] 
+  ].
+
+[] a sh:NodeShape;
+  sh:targetClass js:Print;
+  sh:property [
+    sh:class :ReaderChannel;
+    sh:path js:dataInput;
+    sh:name "Stream containing elements to print to stdout";
+  ].
+

@@ -1,0 +1,57 @@
+@prefix js: <https://w3id.org/conn/js#> .
+@prefix ws: <https://w3id.org/conn/ws#> .
+@prefix : <https://w3id.org/conn#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rml: <https://w3id.org/conn/rml#> .
+@prefix ql: <http://semweb.mmlab.be/ns/ql#> .
+
+<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/http.ttl>.
+<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/file.ttl>.
+<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/kafka.ttl>.
+<> owl:imports <https://raw.githubusercontent.com/ajuvercr/rml-runner/master/ontology.ttl>.
+<> owl:imports <./rinf.ttl>.
+<> owl:imports <../../runner/rml-runner/rmlMapper.ttl>.
+
+[] a js:JsChannel;
+  :reader <raw/reader-js>;
+  :writer <raw/writer-js>.
+
+<raw/reader-js> a :JsReaderChannel.
+<raw/writer-js> a :JsWriterChannel.
+
+[] a js:JsChannel;
+  :reader <mapping/reader-js>;
+  :writer <mapping/writer-js>.
+
+<mapping/reader-js> a :JsReaderChannel.
+<mapping/writer-js> a :JsWriterChannel.
+
+[] a js:JsChannel;
+  :reader <ld/reader-js>;
+  :writer <ld/writer-js>.
+
+<ld/reader-js> a :JsReaderChannel.
+<ld/writer-js> a :JsWriterChannel.
+
+<countryChannel> a :HttpReaderChannel;
+  :httpPort 3333.
+
+ [] a js:GetRINF; 
+   js:countries <countryChannel>;
+   js:mappingOutput <mapping/writer-js>;
+   js:dataOutput <raw/writer-js>.
+
+[] a js:RmlMapperReader;
+  js:rml_data_input <raw/reader-js>;
+  js:rml_data_output <ld/writer-js>;
+  js:rml_mapping_reader <mapping/reader-js>;
+  rml:referenceFormulation ql:XPath;
+  rml:iterator "/RINFData//SOLTrack";
+  rml:jarFile <./rml-mapper-6.x.x.jar>.
+
+
+ [] a js:Print;
+   js:dataInput <ld/reader-js>.
+
+
