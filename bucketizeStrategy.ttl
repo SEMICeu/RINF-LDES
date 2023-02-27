@@ -1,0 +1,22 @@
+@prefix ex: <http://example.org/ns#> .
+@prefix ldes: <https://w3id.org/ldes#> .
+@prefix tree: <https://w3id.org/tree#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+
+ex:MultiBucketizeStrategy # a ldes:BucketizeStrategy; 
+  ldes:bucketType ldes:multi;
+  ldes:configs (
+    ex:BucketizeStrategy
+    ex:BucketizeStrategy2
+  ) .
+
+ex:BucketizeStrategy a ldes:BucketizeStrategy;
+    ldes:bucketType ldes:subject;
+    tree:path <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>;
+    ldes:pageSize 100.
+
+ex:BucketizeStrategy2
+    ldes:bucketType ldes:subject;
+    tree:path dct:isVersionOf;
+    ldes:pageSize 100.
+

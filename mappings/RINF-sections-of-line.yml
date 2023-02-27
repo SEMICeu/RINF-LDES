@@ -1,0 +1,84 @@
+prefixes:
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  eu-country: "http://publications.europa.eu/resource/authority/country/"
+  era: "http://data.europa.eu/949/"
+  era-sn: "http://data.europa.eu/949/concepts/sol-natures/rinf/"
+  geosparql: "http://www.opengis.net/ont/geosparql#"
+
+sources:
+  seol-source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine']
+  countries: ["data/countries.csv~csv"]
+  seol-source-label: ['dataset/sections-of-line-names.xml~xpath','/RINFData/SectionOfLine']
+  op-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint']
+mappings:
+  sections-of-line:
+    sources:
+      - seol-source
+    s: http://data.europa.eu/949/functionalInfrastructure/sectionsOfLine/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - [a, era:SectionOfLine]
+      - [era:canonicalURI,"http://data.europa.eu/949/functionalInfrastructure/sectionsOfLine/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)~iri"]
+#      - [rdfs:label, $(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)]
+#      - [rdfs:label, "$(let $start:=SOLOPStart/@Value , $end:=SOLOPEnd/@Value return(concat( //OperationalPoint[UniqueOPID/@Value=$start][1]/OPName/@Value,'-',//OperationalPoint[UniqueOPID/@Value=$end][1]/OPName/@Value\)\))"]
+      - [era:imCode, $(SOLIMCode/@Value)] # 1.1.0.0.0.1
+      - [era:lineNationalId, http://data.europa.eu/949/functionalInfrastructure/nationalLines/$(SOLLineIdentification/@Value)~iri] # 1.1.0.0.0.2
+#      - [era:opStart, http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(SOLOPStart/@Value)~iri] # 1.1.0.0.0.3
+#      - [era:opEnd, http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(SOLOPEnd/@Value)~iri] # 1.1.0.0.0.4
+      - [era:length, "$(SOLLength/@Value*1000)", xsd:double]  # 1.1.0.0.0.5  xml -> <SOLLength Value="20.8"/>  rdf-> 20800.0
+      - [era:solNature, "era-sn:$(SOLNature/@Value)~iri"] # 1.1.0.0.0.6
+      - [era:hasAbstraction, http://data.europa.eu/949/topology/netElements/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)~iri]
+      - [era:validityStartDate, "$((@ValidityDateStart,'0000-00-00'\)[1])", xsd:date]
+      - [era:validityEndDate, "$((@ValidityDateEnd,'0000-00-00'\)[1])", xsd:date]
+      # - [geosparql:hasGeometry, "http://data.europa.eu/949/functionalInfrastructure/sectionsOfLine/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)/geometry~iri"]
+#      - [geosparql:asWKT, $(@Shape), geosparql:wktLiteral]
+      # - p: era:inCountry
+      #   o:
+      #     - mapping: eu-country
+      #       condition:
+      #         function: equal
+      #         parameters:
+      #           - [str1, $(parent::RINFData/MemberStateCode/@Code)]
+      #           - [str2, $(code)]
+      # - p: era:opStart # 1.1.0.0.0.3
+      #   o:
+      #     - mapping: link-sol-to-operational-point
+      #       condition:
+      #         function: equal
+      #         parameters:
+      #           - [str1, $(SOLOPStart/@Value)]
+      #           - [str2, $(UniqueOPID/@Value)]
+      # - p: era:opEnd # 1.1.0.0.0.4
+      #   o:
+      #     - mapping: link-sol-to-operational-point
+      #       condition:
+      #         function: equal
+      #         parameters:
+      #           - [str1, $(SOLOPEnd/@Value)]
+      #           - [str2, $(UniqueOPID/@Value)]
+
+  # link-sol-to-operational-point:
+  #   sources:
+  #     - op-source
+  #   s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+  #
+  # sections-of-line-label:
+  #   sources:
+  #     - seol-source-label
+  #   s: http://data.europa.eu/949/functionalInfrastructure/sectionsOfLine/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)/$((ValidityDateStart/@ValidityDateStart,'0000-00-00'\)[1])_$((ValidityDateEnd/@ValidityDateEnd,'0000-00-00'\)[1])
+  #   po:
+  #     - [rdfs:label, $(SOLOPStartEnd)]
+
+  # eu-country:
+  #   sources:
+  #     - countries
+  #   s: $(eu)
+  #
+  # sections-of-line-geometry: # UC-031 added WKT geometries
+  #   sources:
+  #     - seol-source
+  #   s: http://data.europa.eu/949/functionalInfrastructure/sectionsOfLine/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)/geometry
+  #   po:
+  #     - [geosparql:asWKT, $(@Shape), geosparql:wktLiteral]

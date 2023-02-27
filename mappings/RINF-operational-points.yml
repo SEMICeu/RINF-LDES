@@ -1,0 +1,158 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  wgs: "http://www.w3.org/2003/01/geo/wgs84_pos#"
+  geosparql: "http://www.opengis.net/ont/geosparql#"
+  eu-country: "http://publications.europa.eu/resource/authority/country/"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  era: "http://data.europa.eu/949/"
+  era-op-types: "http://data.europa.eu/949/concepts/op-types/rinf/"
+
+
+
+sources:
+  op-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint']
+  op_types:  ["data/op_types.csv~csv"]
+  countries: ["data/countries.csv~csv"]
+  op-source-rwl: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPRailwayLocation']
+
+mappings:
+  operational-point:
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - [a, era:OperationalPoint]
+      - [era:canonicalURI,"http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)~iri"]
+      - [rdfs:label, $(OPName/@Value)]
+      - [era:opName, $(OPName/@Value)] # 1.2.0.0.0.1
+      - [era:uopid, $(UniqueOPID/@Value)] # 1.2.0.0.0.2
+      - [era:tafTAPCode,"$(OPTafTapCode[@IsApplicable='Y']/@Value)"] # 1.2.0.0.0.3
+      - [era:opType,"era-op-types:$(OPType/@Value)~iri" ] # 1.2.0.0.0.4
+#      - [geosparql:hasGeometry, "http://data.europa.eu/949/locations/$(OPGeographicLocation/@Longitude)/$(OPGeographicLocation/@Latitude)~iri"] # 1.2.0.0.0.5
+      - [geosparql:hasGeometry, "http://data.europa.eu/949/locations/$(OPGeographicLocation/@Longitude)/$(OPGeographicLocation/@Latitude)~iri"] # 1.2.0.0.0.5
+#      - [wgs:location, "http://data.europa.eu/949/locations/$(OPGeographicLocation/@Longitude)/$(OPGeographicLocation/@Latitude)~iri"] # 1.2.0.0.0.5 OSRM uses this prop
+      - [wgs:location, "http://data.europa.eu/949/locations/$(OPGeographicLocation/@Longitude)/$(OPGeographicLocation/@Latitude)~iri"] # 1.2.0.0.0.5 OSRM uses this prop
+      - [era:hasAbstraction, http://data.europa.eu/949/topology/netElements/$(UniqueOPID/@Value)~iri]
+      - [era:validityStartDate, "$((@ValidityDateStart,'0000-00-00'\)[1])", xsd:date]
+      - [era:validityEndDate, "$((@ValidityDateEnd,'0000-00-00'\)[1])", xsd:date]
+      - [era:opInfoPerCountry, "http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(parent::*/MemberStateCode/@Code)/$(UniqueOPID[matches(@Value,'^EU0'\)]/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])~iri"] # BorderPoints
+      # - p: era:inCountry
+      #   o:
+      #     - mapping: eu-country
+      #       condition:
+      #         function: equal
+      #         parameters:
+      #           - [str1, $(parent::*/MemberStateCode/@Code)]
+      #           - [str2, $(code)]
+
+  operational-border-point: # BorderPoints
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(parent::*/MemberStateCode/@Code)/$(UniqueOPID[matches(@Value,'^EU0'\)]/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - [a, era:BorderPoint]
+      - [rdfs:label, $(OPName/@Value)]
+      - [era:opName, $(OPName/@Value)] # 1.2.0.0.0.1
+      - [era:uopid, $(UniqueOPID/@Value)] # 1.2.0.0.0.2
+      - [era:tafTAPCode,"$(OPTafTapCode[@IsApplicable='Y']/@Value)"] # 1.2.0.0.0.3
+      - [era:opType,"era-op-types:$(OPType/@Value)~iri" ] # 1.2.0.0.0.4
+#      - [geosparql:hasGeometry, "$(OPGeographicLocation/@Longitude)/$(OPGeographicLocation/@Latitude)~iri"] # 1.2.0.0.0.5
+#      - [wgs:location, "$(OPGeographicLocation/@Longitude)/$(OPGeographicLocation/@Latitude)"] # 1.2.0.0.0.5 OSRM uses this prop
+      - [era:validityStartDate, "$((@ValidityDateStart,'0000-00-00'\)[1])", xsd:date]
+      - [era:validityEndDate, "$((@ValidityDateEnd,'0000-00-00'\)[1])", xsd:date]
+      - [era:borderPointOf,"http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)~iri"]
+      # - p: era:inCountry
+      #   o:
+      #     - mapping: eu-country
+      #       condition:
+      #         function: equal
+      #         parameters:
+      #           - [str1, $(parent::*/MemberStateCode/@Code)]
+      #           - [str2, $(code)]
+
+  # op-line-reference:
+  #   sources:
+  #     - op-source-rwl
+  #   s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(parent::*/UniqueOPID/@Value)/$((parent::*/@ValidityDateStart,'0000-00-00'\)[1])_$((parent::*/@ValidityDateEnd,'0000-00-00'\)[1])
+  #   po:
+  #     - [era:lineReference, http://data.europa.eu/949/functionalInfrastructure/lineReferences/$(@NationalIdentNum)_$(@Kilometer)~iri] # 1.2.0.0.0.6
+  #
+  # line-reference:
+  #   sources:
+  #     - op-source-rwl
+  #   s: http://data.europa.eu/949/functionalInfrastructure/lineReferences/$(@NationalIdentNum)_$(@Kilometer)
+  #   po:
+  #     - [a, era:LineReference]
+  #     - [rdfs:label,$(@Kilometer) $(@NationalIdentNum) ]
+  #     - [era:lineNationalId, http://data.europa.eu/949/functionalInfrastructure/nationalLines/$(@NationalIdentNum)~iri]
+  #     - [era:kilometer, $(@Kilometer), xsd:double]
+
+  location:
+    sources:
+      - op-source
+#    s: http://data.europa.eu/949/locations/$(OPGeographicLocation/@Longitude)/$(OPGeographicLocation/@Latitude)
+    s: "http://data.europa.eu/949/locations/$(OPGeographicLocation/@Longitude)/$(OPGeographicLocation/@Latitude)"
+    po:
+      - [a, wgs:Point]
+      - [a, geosparql:Geometry]
+#      - [wgs:lat, $(OPGeographicLocation/@Latitude), xsd:double]
+      - [wgs:lat, "$(OPGeographicLocation/@Latitude)", xsd:double]
+      - [wgs:long, "$(OPGeographicLocation/@Longitude)", xsd:double]
+      - [geosparql:asWKT, "POINT ($(OPGeographicLocation/@Longitude) $(OPGeographicLocation/@Latitude))", geosparql:wktLiteral]
+
+# Now it works with SKOS:
+# e.g http://data.europa.eu/949/concepts/op-types/rinf/90
+#
+#  op-type:
+#    sources:
+#      - op_types
+#    s: era-op-types:$(type)
+
+  eu-country:
+    sources:
+      - countries
+    s: $(eu)
+
+  # ---------------- Generic information --------------
+
+  gauge-changeover: # 1.2.0.0.0.4.1
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - [era:opTypeGaugeChangeover, "$(OPTypeGaugeChangeover[@IsApplicable='Y']/@Value)"]
+
+  # ---------------- Rules and restrictions --------------
+
+  local-rules: # 1.2.3.1
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - p: era:localRulesOrRestrictions
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPRules/OPRulesParameter[@ID='RUL_LocalRulesOrRestrictions' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:localRulesOrRestrictions
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPRules/OPRulesParameter[@ID='RUL_LocalRulesOrRestrictions' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+
+  local-rules-doc: # 1.2.3.2
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - [era:localRulesOrRestrictionsDoc, "$(OPRules/OPRulesParameter[@ID='RUL_LocalRulesOrRestrictionsDocRef' and @IsApplicable='Y']/@Value)"]

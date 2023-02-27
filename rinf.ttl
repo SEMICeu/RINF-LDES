@@ -7,11 +7,42 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
 <> owl:imports <https://raw.githubusercontent.com/ajuvercr/js-runner/4a417b156e3d2471ef91e7f8da0db6a93f0e0c1d/ontology.ttl>. 
+
 <> :install [
-  a :GitInstall;
+  a :GitInstall ;
   :url <https://github.com/SEMICeu/RINF-LDES.git>;
   :build "npm install";
 ].
+
+
+js:GetRINF2 a js:JsProcess;
+  js:file <./lib/Processor.js>;
+  js:function "getRINF2";
+  js:location <./>;
+  js:mapping [
+    a fno:Mapping;
+    fno:parameterMapping [
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:countries;
+      fnom:implementationParameterPosition "0"^^xsd:int
+    ],[
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:dataOutput;
+      fnom:implementationParameterPosition "1"^^xsd:int
+    ]
+  ].
+
+[] a sh:NodeShape;
+  sh:targetClass js:GetRINF2;
+  sh:property [
+    sh:class :WriterChannel;
+    sh:path js:dataOutput;
+    sh:name "Data output channel";
+  ], [
+    sh:class :ReaderChannel;
+    sh:path js:countries;
+    sh:name "Stream containing all countries to process";
+  ].
 
 
 js:GetRINF a js:JsProcess;

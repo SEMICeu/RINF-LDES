@@ -1,0 +1,1743 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  era: "http://data.europa.eu/949/"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  era-trd: "http://data.europa.eu/949/concepts/track-running-directions/rinf/"
+  era-ecb: "http://data.europa.eu/949/concepts/eddy-current-braking/rinf/"
+  era-mb: "http://data.europa.eu/949/concepts/magnetic-braking/rinf/"
+  era-lc: "http://data.europa.eu/949/concepts/load-capabilities/rinf/"
+  era-gaugings: "http://data.europa.eu/949/concepts/gaugings/rinf/"
+  era-ntg: "http://data.europa.eu/949/concepts/nominal-track-gauges/rinf/"
+  era-tds: "http://data.europa.eu/949/concepts/train-detection/rinf/"
+  era-ri: "http://data.europa.eu/949/concepts/rail-inclinations/rinf/"
+  era-pth: "http://data.europa.eu/949/concepts/pantograph-heads/rinf/"
+  era-csm: "http://data.europa.eu/949/concepts/contact-strip-materials/rinf/"
+  era-esc: "http://data.europa.eu/949/concepts/etcs-system-compatibilities/rinf/"
+  era-gsmr: "http://data.europa.eu/949/concepts/gsmr-networks/rinf/"
+  era-gsmrv: "http://data.europa.eu/949/concepts/gsmr-versions/rinf/"
+  era-gsmrnumactivemob: "http://data.europa.eu/949/concepts/gsmr-number-active-mobiles/rinf/"
+  era-gsmroptfunc: "http://data.europa.eu/949/concepts/gsmr-optional-functions/rinf/"
+  era-tenclass: "http://data.europa.eu/949/concepts/ten-classifications/rinf/"
+  era-pnsb: "http://data.europa.eu/949/concepts/profile-num-swap-bodies/rinf/"
+  era-pnst: "http://data.europa.eu/949/concepts/profile-num-semi-trailers/rinf/"
+  era-rsc: "http://data.europa.eu/949/concepts/radio-system-compatibilities/rinf/"
+  era-tpls: "http://data.europa.eu/949/concepts/train-protection-legacy-systems/rinf/"
+  era-lrs: "http://data.europa.eu/949/concepts/legacy-radio-systems/rinf/"
+  era-etcsinfill: "http://data.europa.eu/949/concepts/etcs-infills/rinf/"
+  era-etcsmvers: "http://data.europa.eu/949/concepts/etcs-m-versions/rinf/"
+  era-etcssituation: "http://data.europa.eu/949/concepts/etcs-situation/rinf/"
+  era-opcw: "http://data.europa.eu/949/concepts/other-protection-control-warning/rinf/"
+  era-tsi: "http://data.europa.eu/949/concepts/tsi-compliances/rinf/"
+  era-fc: "http://data.europa.eu/949/concepts/freight-corridor/rinf/"
+  era-linecat: "http://data.europa.eu/949/concepts/line-category/rinf/"
+  era-rsc-voice: "http://data.europa.eu/949/concepts/radio-system-compatibilities-voice/rinf/"
+  era-rsc-data: "http://data.europa.eu/949/concepts/radio-system-compatibilities-data/rinf/"
+  era-tr: "http://data.europa.eu/949/concepts/temperature-ranges/rinf/"
+  era-opth-rinf: "http://data.europa.eu/949/concepts/other-pantograph-heads/rinf/"
+  era-cpth-rinf: "http://data.europa.eu/949/concepts/compliant-pantograph-heads/rinf/"
+
+sources:
+  sol_source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine']
+  soltrack_source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine/SOLTrack']
+  gaugingProfile_source: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID='ILL_Gauging' and @IsApplicable='Y']"]
+  load_capability_source: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID='IPP_LoadCap' and @IsApplicable='Y']"]
+  contactStripMaterial_source: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID='EPA_StripMaterial' and @IsApplicable='Y']"]
+
+mappings:
+  sol-track:
+    sources:
+      - soltrack_source
+#    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [a, era:Track]
+      - [rdfs:label, $(SOLTrackIdentification/@Value)]
+      - [era:hasAbstraction, http://data.europa.eu/949/topology/netElements/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)~iri]
+      - [era:trackId, $(SOLTrackIdentification/@Value)] #  1.1.1.0.0.1
+      - [era:trackDirection, era-trd:$(SOLTrackDirection/@Value)~iri] # 1.1.1.0.0.2
+#      - [era:validityStartDate , $(@ValidityDateStart)]
+#      - [era:validityEndDate, $(@ValidityDateEnd)]
+
+
+  # link-track-to-section-of-line:
+  #   sources:
+  #     - soltrack_source
+  #   s: http://data.europa.eu/949/functionalInfrastructure/sectionsOfLine/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)/$((parent::*/@ValidityDateStart,'0000-00-00'\)[1])_$((parent::*/@ValidityDateEnd,'0000-00-00'\)[1])
+  #   po:
+  #     - [era:track, http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)~iri]
+
+  # ------------IDE / Declarations of verification for track--------------
+
+  eu-commission-verification: # 1.1.1.1.1.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:verificationINF, "$(SOLTrackParameter[@ID='IDE_ECVerification' and @IsApplicable='Y']/@Value)"]
+
+  eu-commission-demonstration: # 1.1.1.1.1.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:demonstrationINF, "$(SOLTrackParameter[@ID='IDE_EIDemonstration' and @IsApplicable='Y']/@Value)"]
+
+  # ------------IPP / Performance parameters--------------
+
+  ten-class: # 1.1.1.1.2.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:tenClassification, "era-tenclass:$(SOLTrackParameter[@ID='IPP_TENClass' and @IsApplicable='Y']/@Value)~iri"]
+
+  ten-gis-id: # 1.1.1.1.2.1.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:tenGISId, "$(SOLTrackParameter[@ID='IPP_TENGISID' and @IsApplicable='Y']/@Value)"]
+
+#   load-capability: # 1.1.1.1.2.4
+#     sources:
+#       - load_capability_source
+#     s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SOLTrack/parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPStart/@Value)_$(parent::SOLTrack/SOLTrackIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPEnd/@Value)
+#     po:
+# #      - [era:loadCapability, "era-lc:$(SOLTrackParameter[@ID='IPP_LoadCap' and @IsApplicable='Y']/@Value)~iri"]
+#       - [era:trackLoadCapability,"http://data.europa.eu/949/functionalInfrastructure/load-capabilities/$(parent::SOLTrack/parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPStart/@Value)_$(parent::SOLTrack/SOLTrackIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPEnd/@Value)_$(replace(@Value,' ','-'\))~iri"]
+
+  national-load-capability: # 1.1.1.1.2.4.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:nationalLoadCapability, "$(SOLTrackParameter[@ID='IPP_NCLoadCap' and @IsApplicable='Y']/@Value)"]
+
+  hslm-compliance: # 1.1.1.1.2.4.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:highSpeedLoadModelCompliance
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_HSLMCompliant' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:highSpeedLoadModelCompliance
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_HSLMCompliant' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:highSpeedLoadModelCompliance
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_HSLMCompliant']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+  
+  structure-check-locations: # 1.1.1.1.2.4.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:structureCheckLocation, "$(SOLTrackParameter[@ID='IPP_StructureCheckLoc' and @IsApplicable='Y']/@Value)", xsd:double]
+
+  compatibility-procedure-document: # 1.1.1.1.2.4.4
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:compatibilityProcedureDocument, "$(SOLTrackParameter[@ID='IPP_StructureCheckDocRef' and @IsApplicable='Y']/@Value)"]
+
+  maximum-permitted-speed: # 1.1.1.1.2.5
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:maximumPermittedSpeed, "$(SOLTrackParameter[@ID='IPP_MaxSpeed' and @IsApplicable='Y']/@Value)", xsd:integer]
+
+  #temperature-range: # 1.1.1.1.2.6
+    #sources:
+    #  - sol_source
+    #s: #http://data.europa.eu/949/functionalInfrastructure/tracks/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLTrack/SOLTrackIdentification/@Value)_$(SOLOPEnd/@Value)
+    #po:
+    #  - [era:minimumTemperature, "$(SOLTrack/SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)", xsd:int]
+    #  - [era:maximumTemperature, "$(SOLTrack/SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)", xsd:int]
+  
+## We set the values of maximum and minimum depending on the Value field at IPP_TempRange using the following table:
+## Value    min    max
+## 10	T1 (-25 to +40)
+## 20	T2 (-40 to +35)
+## 30	T3 (-25 to +45)
+## 40	Tx (-40 to +50)
+
+  temperature-range: # 1.1.1.1.2.6
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:temperatureRange, "era-tr:$(SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)~iri"]
+      - p: era:minimumTemperature
+        o:
+          value: "-25"
+          datatype: "xsd:int"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"]
+      - p: era:minimumTemperature
+        o:
+          value: "-40"
+          datatype: "xsd:int"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"]
+      - p: era:minimumTemperature
+        o:
+          value: "-25"
+          datatype: "xsd:int"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "30"]
+      - p: era:minimumTemperature
+        o:
+          value: "-40"
+          datatype: "xsd:int"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "40"]
+      - p: era:maximumTemperature
+        o:
+          value: "40"
+          datatype: "xsd:int"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"]
+      - p: era:maximumTemperature
+        o:
+          value: "35"
+          datatype: "xsd:int"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"]
+      - p: era:maximumTemperature
+        o:
+          value: "45"
+          datatype: "xsd:int"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "30"]
+      - p: era:maximumTemperature
+        o:
+          value: "50"
+          datatype: "xsd:int"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_TempRange' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "40"]
+
+  maximum-altitude: # 1.1.1.1.2.7
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:maximumAltitude, "$(SOLTrackParameter[@ID='IPP_MaxAltitude' and @IsApplicable='Y']/@Value)"]
+
+  severe-weather-conditions: # 1.1.1.1.2.8
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hasSevereWeatherConditions
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_SevereClimateCon' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasSevereWeatherConditions
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_SevereClimateCon' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasSevereWeatherConditions
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IPP_SevereClimateCon']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  # ------------ILL/ Line layout--------------
+
+  # gauging: # 1.1.1.1.3.1.1
+  #   sources:
+  #     - gaugingProfile_source
+  #   s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SOLTrack/parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPStart/@Value)_$(parent::SOLTrack/SOLTrackIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPEnd/@Value)
+  #   po:
+  #     - [era:gaugingProfile, "era-gaugings:$(@Value)~iri"]
+
+  gauging-check-locations: # 1.1.1.1.3.1.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:gaugingCheckLocation, "$(SOLTrackParameter[@ID='ILL_GaugeCheckLoc' and @IsApplicable='Y']/@Value)"]
+  
+  gauging-transversal-document: # 1.1.1.1.3.1.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:gaugingTransversalDocument, "$(SOLTrackParameter[@ID='ILL_GaugeCheckDocRef' and @IsApplicable='Y']/@Value)"]
+
+  profile-number-swap-body: # 1.1.1.1.3.4
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:profileNumberSwapBodies, "era-pnsb:$(SOLTrackParameter[@ID='ILL_ProfileNumSwapBodies' and @IsApplicable='Y']/@Value)~iri"]
+  
+  profile-number-semi-trailer: # 1.1.1.1.3.5
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:profileNumberSemiTrailers, "era-pnst:$(SOLTrackParameter[@ID='ILL_ProfileNumSemiTrailers' and @IsApplicable='Y']/@Value)~iri"]
+  
+  specific-information: # 1.1.1.1.3.5.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:specificInformation, "$(SOLTrackParameter[@ID='ILL_SpecificInfo' and @IsApplicable='Y']/@Value)"]
+
+  gradient-profile: # 1.1.1.1.3.6
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+#      - [era:gradientProfile, "$(SOLTrackParameter[@ID='ILL_GradProfile' and @IsApplicable='Y']/@Value)"]
+      - [era:gradientProfile, "$(string-join(SOLTrackParameter[@ID='ILL_GradProfile' and @IsApplicable='Y']/@Value,','\))"] # E.g  "+4.3(4.130)+0.1(4.452)+3.5(4.857)...."
+
+  minimum-horizontal-curve-radius: # 1.1.1.1.3.7
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:minimumHorizontalRadius, "$(SOLTrackParameter[@ID='ILL_MinRadHorzCurve' and @IsApplicable='Y']/@Value)", xsd:integer]
+
+  # ------------ITP / Track parameters--------------
+
+  nominal-track-gauge: # 1.1.1.1.4.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:wheelSetGauge, "era-ntg:$(SOLTrackParameter[@ID='ITP_NomGauge' and @IsApplicable='Y']/@Value)~iri"]
+
+  cant-deficiency: # 1.1.1.1.4.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:cantDeficiency, "$(SOLTrackParameter[@ID='ITP_CantDeficiency' and @IsApplicable='Y']/@Value)",  xsd:integer]
+
+  rail-inclination: # 1.1.1.1.4.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:railInclination, "era-ri:$(SOLTrackParameter[@ID='ITP_RailInclination' and @IsApplicable='Y']/@Value)~iri"]
+
+  ballast: # 1.1.1.1.4.4
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hasBallast
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='ITP_Ballast' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasBallast
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='ITP_Ballast' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasBallast
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='ITP_Ballast']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  # ------------Switches and crossings--------------
+
+  switch-crossing: # 1.1.1.1.5.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:tsiSwitchCrossing
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='ISC_TSISwitchCrossing' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:tsiSwitchCrossing
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='ISC_TSISwitchCrossing' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:tsiSwitchCrossing
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='ISC_TSISwitchCrossing']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  minimum-wheel-diameter: # 1.1.1.1.5.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:minimumWheelDiameter, "$(SOLTrackParameter[@ID='ISC_MinWheelDiaFixObtuseCrossings' and @IsApplicable='Y']/@Value)", xsd:integer]
+
+  # ------------ILR / Track resistance to applied loads--------------
+
+  maximum-train-deceleration: # 1.1.1.1.6.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:maximumTrainDeceleration, "$(SOLTrackParameter[@ID='ILR_MaxDeceleration' and @IsApplicable='Y']/@Value)", xsd:double]
+
+  use-of-eddy-current-brakes: # 1.1.1.1.6.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:eddyCurrentBraking, "era-ecb:$(SOLTrackParameter[@ID='ILR_EddyCurrentBrakes' and @IsApplicable='Y']/@Value)~iri"]
+
+  use-of-magnetic-brakes: # 1.1.1.1.6.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:magneticBraking, "era-mb:$(SOLTrackParameter[@ID='ILR_MagneticBrakes' and @IsApplicable='Y']/@Value)~iri"]
+
+  eddy-current-braking-conditions-document: # 1.1.1.1.6.4
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:eddyCurrentBrakingConditionsDocument, "$(SOLTrackParameter[@ID='ILR_ECBDocRef' and @IsApplicable='Y']/@Value)"]
+
+  magnetic-braking-conditions-document: # 1.1.1.1.6.5
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:magneticBrakingConditionsDocument, "$(SOLTrackParameter[@ID='ILR_MBDocRef' and @IsApplicable='Y']/@Value)"]
+
+  # ------------IHS / Health, safety and environment--------------
+
+  flange-lube-forbidden: # 1.1.1.1.7.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:flangeLubeForbidden
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_FlangeLubeForbidden' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:flangeLubeForbidden
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_FlangeLubeForbidden' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:flangeLubeForbidden
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_FlangeLubeForbidden']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  level-crossings: # 1.1.1.1.7.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hasLevelCrossings
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_LevelCrossing' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasLevelCrossings
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_LevelCrossing' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasLevelCrossings
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_LevelCrossing']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  acceleration-level-crossing: # 1.1.1.1.7.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:accelerationLevelCrossing, "$(SOLTrackParameter[@ID='IHS_AccelerationLevelCrossing' and @IsApplicable='Y']/@Value)"]
+
+  hot-axle-box-detector-existence: # 1.1.1.1.7.4
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hasHotAxleBoxDetector
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_HABDExist' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasHotAxleBoxDetector
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_HABDExist' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasHotAxleBoxDetector
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_HABDExist']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  hot-axle-box-detection-tsi-compliant: # 1.1.1.1.7.5
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hotAxleBoxDetectorTSICompliant
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_TSIHABD' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hotAxleBoxDetectorTSICompliant
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_TSIHABD' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hotAxleBoxDetectorTSICompliant
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_TSIHABD']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  hot-axle-box-detector-identification: # 1.1.1.1.7.6 (no data! no explanation about data format in RINF's guide)
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:hotAxleBoxDetectorIdentification, "$(SOLTrackParameter[@ID='IHS_HABDID' and @IsApplicable='Y']/@Value)"]
+  
+  hot-axle-box-detector-generation: # 1.1.1.1.7.7 (no data! no explanation about data format in RINF's guide)
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:hotAxleBoxDetectorGeneration, "$(SOLTrackParameter[@ID='IHS_HABDGen' and @IsApplicable='Y']/@Value)"]
+
+  hot-axle-box-detector-location: # 1.1.1.1.7.8
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:hotAxleBoxDetectorLocation, "$(SOLTrackParameter[@ID='IHS_HABDLoc' and @IsApplicable='Y']/@Value)", xsd:double]
+
+  hot-axle-box-detector-direction: # 1.1.1.1.7.9 (no data!)
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:hotAxleBoxDetectorDirection, "$(SOLTrackParameter[@ID='IHS_HABDDirection' and @IsApplicable='Y']/@Value)"]
+
+  red-lights: # 1.1.1.1.7.10
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:redLightsRequired
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_RedLights/' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:redLightsRequired
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_RedLights' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:redLightsRequired
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_RedLights']/@IsApplicable"]
+            - [grel:valueParameter2, "N"]
+
+  quieter-route: # 1.1.1.1.7.11
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:isQuietRoute
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_QuietRoute' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:isQuietRoute
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_QuietRoute' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:isQuietRoute
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='IHS_QuietRoute']/@IsApplicable"]
+            - [grel:valueParameter2, "N"]
+
+  # ------------EDE/ Declarations of verification for track--------------
+
+  energy-system-verification: # 1.1.1.2.1.1
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:verificationENE, "$(SOLTrackParameter[@ID='EDE_ECVerification' and @IsApplicable='Y']/@Value)"]
+
+  energy-system-demonstration: # 1.1.1.2.1.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:demonstrationENE, "$(SOLTrackParameter[@ID='EDE_EIDemonstration' and @IsApplicable='Y']/@Value)"]
+
+  # ------------ECS / Contact line system--------------
+
+### Contiene GroupSet, revisar con Jhon si meto el condicional
+  contact-line-system: # 1.1.1.2.2.1.1 Points to SET parameter-based entity
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:contactLineSystem, "http://data.europa.eu/949/functionalInfrastructure/contactLineSystems/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='ECS_SystemType']/@Set)~iri"]
+
+  maximum-wire-height: # 1.1.1.2.2.5
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:maximumContactWireHeight, "$(SOLTrackParameter[@ID='ECS_MaxWireHeight' and @IsApplicable='Y']/@Value)", xsd:double]
+
+  minimum-wire-height: # 1.1.1.2.2.6
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:minimumContactWireHeight, "$(SOLTrackParameter[@ID='ECS_MinWireHeight' and @IsApplicable='Y']/@Value)", xsd:double]
+
+  # ------------EPA / Pantograph--------------
+
+  pantograph-tsi-compliant: # 1.1.1.2.3.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:tsiPantographHead, "era-cpth-rinf:$(SOLTrackParameter[@ID='EPA_TSIHeads' and @IsApplicable='Y']/@Value)~iri"]
+
+  other-accepted-pantograph: # 1.1.1.2.3.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:otherPantographHead, "era-opth-rinf:$(SOLTrackParameter[@ID='EPA_OtherHeads' and @IsApplicable='Y']/@Value)~iri"]
+
+  raised-pantograph-distance-speed: # 1.1.1.2.3.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:raisedPantographsDistanceAndSpeed, "$(SOLTrackParameter[@ID='EPA_NumRaisedSpeed' and @IsApplicable='Y']/@Value)"]
+
+#   contact-strip-material: # 1.1.1.2.3.4
+#     sources:
+#       - contactStripMaterial_source
+#     s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SOLTrack/parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPStart/@Value)_$(parent::SOLTrack/SOLTrackIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPEnd/@Value)
+#     po:
+# #      - [era:contactStripMaterial, "era-csm:$(SOLTrackParameter[@ID='EPA_StripMaterial' and @IsApplicable='Y']/@Value)~iri"]
+#       - [era:contactStripMaterial, "era-csm:$(substring(@Value,1,2\))~iri"]
+# #      - [era:trackContactStripMaterial, "http://data.europa.eu/949/functionalInfrastructure/contact-strip-materials/$(replace(@Value,' ','-'\))~iri"]
+
+  # ------------EOS / OCL separation sections--------------
+
+  phase-separation: # 1.1.1.2.4.1.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:phaseSeparation
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='EOS_Phase' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:phaseSeparation
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='EOS_Phase' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:phaseSeparation
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='EOS_Phase']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  phase-information: # 1.1.1.2.4.1.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:phaseInfo, "$(SOLTrackParameter[@ID='EOS_InfoPhase' and @IsApplicable='Y']/@Value)"]
+
+  system-separation: # 1.1.1.2.4.2.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hasSystemSeparation
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='EOS_System' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasSystemSeparation
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='EOS_System' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasSystemSeparation
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='EOS_System']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  system-separation-info: # 1.1.1.2.4.2.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:systemSeparationInfo, "$(SOLTrackParameter[@ID='EOS_InfoSystem' and @IsApplicable='Y']/@Value)"]
+
+  distance-sign-to-phase-end: # 1.1.1.2.4.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:distSignToPhaseEnd, "$(SOLTrackParameter[@ID='EOS_DistSignToPhaseEnd' and @IsApplicable='Y']/@Value)", xsd:int]
+
+  # ------------ERS / Requirements for rolling stock--------------
+
+  contact-force: # 1.1.1.2.5.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:permittedContactForce, "$(SOLTrackParameter[@ID='ERS_ContactForce' and @IsApplicable='Y']/@Value)"]
+
+  automatic-dropping-device-required: # 1.1.1.2.5.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:automaticDroppingDeviceRequired
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='ERS_AutoDropRequired' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:automaticDroppingDeviceRequired
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='ERS_AutoDropRequired' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:automaticDroppingDeviceRequired
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='ERS_AutoDropRequired']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  # ------------CDE / Declarations of verification for track--------------
+
+  cde-energy-system-verification: # 1.1.1.3.1.1
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:verificationCCS, "$(SOLTrackParameter[@ID='CDE_ECVerification' and @IsApplicable='Y']/@Value)"]
+  
+  # ------------CPE / TSI compliant train protection system (ETCS)--------------
+
+### Contiene GroupSet
+  etcs-level: # 1.1.1.3.2.1 points to SET parameter-based entity
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:etcsLevel, "http://data.europa.eu/949/functionalInfrastructure/etcsLevels/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CPE_Level']/@Set)~iri"]
+
+  etcs-infill-line-access: # 1.1.1.3.2.3
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:etcsInfillLineAccess
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_Infill' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:etcsInfillLineAccess
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_Infill' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:etcsInfillLineAccess
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_Infill']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+      
+  
+  etcs-infill-line-side: # 1.1.1.3.2.4
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:etcsInfill, "era-etcsinfill:$(SOLTrackParameter[@ID='CPE_InfillLineSide' and @IsApplicable='Y']/@Value)~iri"]
+
+  etcs-nat-packet-44: # 1.1.1.3.2.5
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:etcsNationalPacket44
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_NatApplication' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:etcsNationalPacket44
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_NatApplication' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:etcsNationalPacket44
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_NatApplication']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  etcs-existence-restrictions-conditions: # 1.1.1.3.2.6
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hasETCSRestrictionsConditions
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_RestrictionsConditions' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasETCSRestrictionsConditions
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_RestrictionsConditions' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasETCSRestrictionsConditions
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_RestrictionsConditions']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  etcs-optional-functions: # 1.1.1.3.2.7
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:etcsOptionalFunctions, "$(SOLTrackParameter[@ID='CPE_OptionalFunctions' and @IsApplicable='Y']/@Value)"]
+
+  train-integrity-required: # 1.1.1.3.2.8
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:trainIntegrityOnBoardRequired
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_IntegrityConfirmation' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:trainIntegrityOnBoardRequired
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_IntegrityConfirmation' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:trainIntegrityOnBoardRequired
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPE_IntegrityConfirmation']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  etcs-compatible: # 1.1.1.3.2.9
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:etcsSystemCompatibility, "era-esc:$(SOLTrackParameter[@ID='CPE_SystemCompatibility' and @IsApplicable='Y']/@Value)~iri"]
+
+  etcs-m-version: # 1.1.1.3.2.10
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:etcsMVersion, "era-etcsmvers:$(SOLTrackParameter[@ID='CPE_MVersion' and @IsApplicable='Y']/@Value)~iri"]
+  
+  # ------------CRG / TSI compliant radio (GSM-R)--------------
+
+
+  gsm-r-version: # 1.1.1.3.3.1
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:gsmRVersion, "era-gsmrv:$(SOLTrackParameter[@ID='CRG_Version' and @IsApplicable='Y']/@Value)~iri"]
+
+  gsm-r-number-active-mobile: # 1.1.1.3.3.2
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:gsmRActiveMobiles, "era-gsmrnumactivemob:$(SOLTrackParameter[@ID='CRG_NumActiveMob' and @IsApplicable='Y']/@Value)~iri"]
+
+  gsm-r-optional-function: # 1.1.1.3.3.3
+    sources: 
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:gsmROptionalFunctions, "era-gsmroptfunc:$(SOLTrackParameter[@ID='CRG_OptionalFunctions' and @IsApplicable='Y']/@Value)~iri"]
+
+  gsm-r-additional-information: # 1.1.1.3.3.3.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:gsmRAdditionalInfo, "$(SOLTrackParameter[@ID='CRG_AdditionalnetworkInfo' and @IsApplicable='Y']/@Value)"]
+
+  etcs-gprs: # 1.1.1.3.3.3.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:gprsForETCS
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_GPRSForETCS' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:gprsForETCS
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_GPRSForETCS' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:gprsForETCS
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_GPRSForETCS']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  gprs-implementation-area: # 1.1.1.3.3.3.3  NO DATA!
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:gprsImplementationArea, "$(SOLTrackParameter[@ID='CRG_GPRSAreaOfImpl' and @IsApplicable='Y']/@Value)"]
+
+  group-555-support: # 1.1.1.3.3.4
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:usesGroup555
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_Needof555' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:usesGroup555
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_Needof555' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:usesGroup555
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_Needof555']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+  
+  gsm-r-network-coverage: # 1.1.1.3.3.5
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:gsmrNetworkCoverage, "era-gsmr:$(SOLTrackParameter[@ID='CRG_RoamingAgreement' and @IsApplicable='Y']/@Value)~iri"]
+
+  public-network-roaming: # 1.1.1.3.3.6
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:publicNetworkRoaming
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_RoamingPublic' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:publicNetworkRoaming
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_RoamingPublic' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:publicNetworkRoaming
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_RoamingPublic']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  public-network-roaming-details: # 1.1.1.3.3.7
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:publicNetworkRoamingDetails, "$(SOLTrackParameter[@ID='CRG_RoamingPublicDetails' and @IsApplicable='Y']/@Value)"]
+
+  gsm-r-no-coverage: # 1.1.1.3.3.8
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:gsmRNoCoverage
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_GSMRNoCoverage' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:gsmRNoCoverage
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_GSMRNoCoverage' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:gsmRNoCoverage
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CRG_GSMRNoCoverage']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  voice-radio-compatible: # 1.1.1.3.3.9
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:voiceRadioCompatible, "era-rsc-voice:$(SOLTrackParameter[@ID='CRG_RadioCompVoice' and @IsApplicable='Y']/@Value)~iri"]
+
+  data-radio-compatible: # 1.1.1.3.3.10
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:dataRadioCompatible, "era-rsc-data:$(SOLTrackParameter[@ID='CRG_RadioCompData' and @IsApplicable='Y']/@Value)~iri"]
+
+  # ------------CCD / Train detection systems fully compliant with the TSI--------------
+
+  tsi-train-detection: # 1.1.1.3.4.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hasTSITrainDetection
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CCD_TSITrainDetection' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasTSITrainDetection
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CCD_TSITrainDetection' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasTSITrainDetection
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CCD_TSITrainDetection']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  # ------------CPO / Train protection legacy systems--------------
+
+  other-train-train-protection: # 1.1.1.3.5.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hasOtherTrainProtection
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPO_Installed' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasOtherTrainProtection
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPO_Installed' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasOtherTrainProtection
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPO_Installed']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  multiple-train-protection-required: # 1.1.1.3.5.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:multipleTrainProtectionRequired
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPO_MultipleRequired' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:multipleTrainProtectionRequired
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPO_MultipleRequired' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:multipleTrainProtectionRequired
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CPO_MultipleRequired']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  protection-legacy-system: # 1.1.1.3.5.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:protectionLegacySystem, "era-tpls:$(SOLTrackParameter[@ID='CPO_LegacyTrainProtection' and @IsApplicable='Y']/@Value)~iri"]
+
+  # ------------CRS / Other radio systems--------------
+
+  legacy-radio-system: # 1.1.1.3.6.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:legacyRadioSystem, "era-lrs:$(SOLTrackParameter[@ID='CRS_Installed' and @IsApplicable='Y']/@Value)~iri"]
+  
+  # ------------CTD / Train detection systems not fully compliant with the TSI--------------
+
+### Contiene GroupSet
+  train-detection-system: # 1.1.1.3.7.1.1 Points to SET parameter-based entity
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:trainDetectionSystem, "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_DetectionSystem']/@Set)~iri"]
+
+#  detection-system-specific-check-document: # 1.1.1.3.7.1.3 --> Domain era:TrainDetectionSystem
+#    sources:
+#      - soltrack_source
+#    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+#    po:
+#      - [era:trainDetectionSystemSpecificCheckDocument, "$(SOLTrackParameter[@ID='CTD_TCCheckDocRef' and @IsApplicable='Y']/@Value)"]
+
+#  french-detection-limitation: # 1.1.1.3.7.1.4
+#    sources:
+#      - soltrack_source
+#    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+#    po:
+#      - [era:frenchTrainDetectionSystemLimitation, "era-tds:$(SOLTrackParameter[@ID='CTD_TCLimitation' and @IsApplicable='Y']/@Value)~iri"]
+
+  # ------------CTS / Transitions between systems--------------
+
+  switch-protect-control-warning: # 1.1.1.3.8.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:switchProtectControlWarning
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTS_SwitchProtectControlWarn' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:switchProtectControlWarning
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTS_SwitchProtectControlWarn' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:switchProtectControlWarning
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTS_SwitchProtectControlWarn']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  switch-radio-system: # 1.1.1.3.8.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:switchRadioSystem
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTS_SwitchRadioSystem' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:switchRadioSystem
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTS_SwitchRadioSystem' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:switchRadioSystem
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTS_SwitchRadioSystem']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  # ------------CEI / Parameters related to electromagnetic interferences--------------
+
+  magnetic-fields-tsi-compliant: # 1.1.1.3.9.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+#      - [era:TSIMagneticFields, "era-tsi:$(SOLTrackParameter[@ID='CEI_TSIMagneticFields' and @IsApplicable='Y']/@Value)~iri"]
+      - p: era:TSIMagneticFields
+        o: era-tsi:none~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CEI_TSIMagneticFields' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] # none
+      - p: era:TSIMagneticFields
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CEI_TSIMagneticFields' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] # TSI_compliant
+      - p: era:TSIMagneticFields
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CEI_TSIMagneticFields' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "30"] # not_TSI_compliant
+
+  traction-harmonics-tsi-compliant: # 1.1.1.3.9.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+#      - [era:TSITractionHarmonics, "era-tsi:$(SOLTrackParameter[@ID='CEI_TSITractionHarmonics' and @IsApplicable='Y']/@Value)~iri"]
+      - p: era:TSITractionHarmonics
+        o: era-tsi:none~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CEI_TSITractionHarmonics' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] # none
+      - p: era:TSITractionHarmonics
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CEI_TSITractionHarmonics' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] # TSI_compliant
+      - p: era:TSITractionHarmonics
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CEI_TSITractionHarmonics' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "30"] # not_TSI_compliant
+
+  # ------------CLD / Line-side system for degraded situation--------------
+
+  etcs-situation: # 1.1.1.3.10.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:etcsDegradedSituation, "era-etcssituation:$(SOLTrackParameter[@ID='CLD_ETCSSituation' and @IsApplicable='Y']/@Value)~iri"]
+
+  other-protection-control-warning: # 1.1.1.3.10.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:otherTrainProtection, "era-opcw:$(SOLTrackParameter[@ID='CLD_OtherProtectControlWarn' and @IsApplicable='Y']/@Value)~iri"]
+
+  # ------------CBP / Brake related parameters--------------
+
+  maximum-braking-distance: # 1.1.1.3.11.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:maximumBrakingDistance, "$(SOLTrackParameter[@ID='CBP_MaxBrakeDist' and @IsApplicable='Y']/@Value)", xsd:int]
+
+  has-additional-braking-information: # 1.1.1.3.11.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:hasAdditionalBrakingInformation
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CBP_AddInfoAvailable' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasAdditionalBrakingInformation
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CBP_AddInfoAvailable' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasAdditionalBrakingInformation
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CBP_AddInfoAvailable']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  additional-braking-information-document: # 1.1.1.3.11.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:additionalBrakingInformationDocument, "$(SOLTrackParameter[@ID='CBP_BrakePerfDocRef' and @IsApplicable='Y']/@Value)"]
+
+  # ------------COP / Other CCS related parameters--------------
+
+  tilting: # 1.1.1.3.12.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:tiltingSupported
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='COP_Tilting' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:tiltingSupported
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='COP_Tilting' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:tiltingSupported
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='COP_Tilting']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  # ------------Rules and restriction--------------
+
+  local-rules-or-restrictions: # 1.1.1.4.1
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - p: era:localRulesOrRestrictions
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='RUL_LocalRulesOrRestrictions' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:localRulesOrRestrictions
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='RUL_LocalRulesOrRestrictions' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:localRulesOrRestrictions
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='RUL_LocalRulesOrRestrictions']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+
+  local-rules-or-restrictions-doc-ref: # 1.1.1.4.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:localRulesOrRestrictionsDoc, "$(SOLTrackParameter[@ID='RUL_LocalRulesOrRestrictionsDocRef' and @IsApplicable='Y']/@Value)"]
+
+  # ------------Part of a Railway Freight Corridor--------------
+
+  freight-corridor: # 1.1.1.1.2.3
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+    po:
+      - [era:freightCorridor, "era-fc:$(SOLTrackParameter[@ID='IPP_FreightCorridor' and @IsApplicable='Y']/@Value)~iri"]
+
+
+  line-categories: # 1.1.1.1.2.2
+    sources:
+      - soltrack_source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SectionOfLine/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::SectionOfLine/SOLOPEnd/@Value)
+#    s: http://data.europa.eu/949/functionalInfrastructure/nationalLines/$(SOLLineIdentification/@Value)
+    po:
+      - [era:lineCategory, "era-linecat:$(SOLTrackParameter[@ID='IPP_LineCat' and @IsApplicable='Y']/@Value)~iri"]

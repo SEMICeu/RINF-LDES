@@ -1,0 +1,123 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  era: "http://data.europa.eu/949/"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  era-tenclass: "http://data.europa.eu/949/concepts/ten-classifications/rinf/"
+  era-linecat: "http://data.europa.eu/949/concepts/line-category/rinf/"
+  era-fc: "http://data.europa.eu/949/concepts/freight-corridor/rinf/"
+  era-gaugings: "http://data.europa.eu/949/concepts/gaugings/rinf/"
+  era-ntg: "http://data.europa.eu/949/concepts/nominal-track-gauges/rinf/"
+sources:
+  op-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPTrack']
+  op-gauging-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPTrack/OPTrackParameter[@ID="ILL_Gauging" and @IsApplicable="Y"]']
+  ten-class-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPTrack/OPTrackParameter[@ID="IPP_TENClass" and @IsApplicable="Y"]']
+  line-cat-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPTrack/OPTrackParameter[@ID="IPP_LineCat" and @IsApplicable="Y"]']
+  freight-corridor-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPTrack/OPTrackParameter[@ID="IPP_FreightCorridor" and @IsApplicable="Y"]']
+
+mappings:
+  # ------------ 1.2.1.0.0 Generic information --------------
+  op-track:
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/UniqueOPID/@Value)_$(OPTrackIdentification/@Value)
+    po:
+      - [a, era:Track]
+#      - [rdfs:label, $(parent::*/UniqueOPID/@Value)-$(OPTrackIdentification/@Value)]
+      - [rdfs:label, $(OPTrackIdentification/@Value)]
+      - [era:imCode, $(OPTrackIMCode/@Value)]
+      - [era:trackId, $(OPTrackIdentification/@Value)]
+    graph: ${NAMED_GRAPH}
+  link-track-to-operational-point:
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(parent::*/UniqueOPID/@Value)/$((parent::*/@ValidityDateStart,'0000-00-00'\)[1])_$((parent::*/@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - [era:track, http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/UniqueOPID/@Value)_$(OPTrackIdentification/@Value)~iri]
+    graph: ${NAMED_GRAPH}
+
+  link-track-to-operational-border-point: # link to OP's border points with Tracks
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(parent::*/parent::*/MemberStateCode/@Code)/$(parent::*/UniqueOPID[matches(@Value,'^EU0'\)]/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - [era:track, http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/UniqueOPID/@Value)_$(OPTrackIdentification/@Value)~iri]
+    graph: ${NAMED_GRAPH}
+
+  # ------------ Declarations of verification for track --------------
+  ec-verification: # 1.2.1.0.1.1
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/UniqueOPID/@Value)_$(OPTrackIdentification/@Value)
+    po:
+      - [era:verificationINF, "$(OPTrackParameter[@ID='IDE_ECVerification' and @IsApplicable='Y']/@Value)"]  #verificationINF
+    graph: ${NAMED_GRAPH}
+
+  ei-demonstration: # 1.2.1.0.1.2
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/UniqueOPID/@Value)_$(OPTrackIdentification/@Value)
+    po:
+      - [era:demonstrationINF, "$(OPTrackParameter[@ID='IDE_EIDemonstration' and @IsApplicable='Y']/@Value)"] # demonstrationINF
+    graph: ${NAMED_GRAPH}
+  # ------------ Performance parameters --------------
+  ten-class: # 1.2.1.0.2.1
+    sources:
+      - ten-class-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::OPTrack/parent::*/UniqueOPID/@Value)_$(parent::OPTrack/OPTrackIdentification/@Value)
+    po:
+      - [era:tenClassification, "era-tenclass:$(@Value)~iri"] #  TEN classification of track
+    graph: ${NAMED_GRAPH}
+
+  line-cat: # 1.2.1.0.2.2
+    sources:
+      - line-cat-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::OPTrack/parent::*/UniqueOPID/@Value)_$(parent::OPTrack/OPTrackIdentification/@Value)
+    po:
+      - [era:lineCategory, "era-linecat:$(@Value)~iri"] # / Category of Line
+    graph: ${NAMED_GRAPH}
+
+  freight-corridor: # 1.2.1.0.2.3
+    sources:
+      - freight-corridor-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::OPTrack/parent::*/UniqueOPID/@Value)_$(parent::OPTrack/OPTrackIdentification/@Value)
+    po:
+      - [era:freightCorridor, "era-fc:$(@Value)~iri"] #  Part of a Railway freight corridor
+    graph: ${NAMED_GRAPH}
+
+  # ------------ Line layout --------------
+  gauging: # 1.2.1.0.3.4
+    sources:
+      - op-gauging-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::OPTrack/parent::*/UniqueOPID/@Value)_$(parent::OPTrack/OPTrackIdentification/@Value)
+    po:
+      - [era:gaugingProfile, "era-gaugings:$(@Value)~iri"] # gaugingProfile
+    graph: ${NAMED_GRAPH}
+
+
+  gauging-check-locations: # 1.2.1.0.3.5
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/UniqueOPID/@Value)_$(OPTrackIdentification/@Value)
+    po:
+      - [era:gaugingCheckLocation, "$(OPTrackParameter[@ID='ILL_GaugeCheckLoc' and @IsApplicable='Y']/@Value)"] # gaugingCheckLocation
+    graph: ${NAMED_GRAPH}
+  gauging-transversal-document: # 1.2.1.0.3.6
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/UniqueOPID/@Value)_$(OPTrackIdentification/@Value)
+    po:
+      - [era:gaugingTransversalDocument, "$(OPTrackParameter[@ID='ILL_GaugeCheckDocRef' and @IsApplicable='Y']/@Value)"] # gaugingTransversalDocument
+      # <SOLTrackParameter Value="Obstacles Binod Dsi.xlsx" IsApplicable="Y" ID="ILL_GaugeCheckDocRef"/>
+
+    graph: ${NAMED_GRAPH}
+  # ------------Track parameters --------------
+
+  nominal-track-gauge: # 1.2.1.0.4.1
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/UniqueOPID/@Value)_$(OPTrackIdentification/@Value)
+    po:
+      - [era:wheelSetGauge, "era-ntg:$(OPTrack/OPTrackParameter[@ID='ITP_NomGauge' and @IsApplicable='Y']/@Value)~iri"] #  wheelSetGauge
+    graph: ${NAMED_GRAPH}
