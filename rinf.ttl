@@ -7,6 +7,11 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
 <> owl:imports <https://raw.githubusercontent.com/ajuvercr/js-runner/4a417b156e3d2471ef91e7f8da0db6a93f0e0c1d/ontology.ttl>. 
+<> :install [
+  a :GitInstall;
+  :url <https://github.com/SEMICeu/RINF-LDES.git>;
+  :build "npm install";
+].
 
 
 js:GetRINF a js:JsProcess;

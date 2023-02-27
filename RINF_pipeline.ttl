@@ -10,8 +10,11 @@
 <> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/file.ttl>.
 <> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/kafka.ttl>.
 <> owl:imports <https://raw.githubusercontent.com/ajuvercr/rml-runner/master/ontology.ttl>.
-<> owl:imports <./rinf.ttl>.
-<> owl:imports <../../runner/rml-runner/rmlMapper.ttl>.
+<> owl:imports <./processor/RINF/rinf.ttl>.
+<> owl:imports <./processor/sds-processors/sdsify.ttl>.
+<> owl:imports <./processor/sds-storage-writer-mongo/step.ttl>.
+<> owl:imports <./runner/rml-runner/rmlMapper.ttl>.
+
 
 [] a js:JsChannel;
   :reader <raw/reader-js>;
@@ -20,12 +23,14 @@
 <raw/reader-js> a :JsReaderChannel.
 <raw/writer-js> a :JsWriterChannel.
 
+
 [] a js:JsChannel;
   :reader <mapping/reader-js>;
   :writer <mapping/writer-js>.
 
 <mapping/reader-js> a :JsReaderChannel.
 <mapping/writer-js> a :JsWriterChannel.
+
 
 [] a js:JsChannel;
   :reader <ld/reader-js>;
@@ -34,8 +39,22 @@
 <ld/reader-js> a :JsReaderChannel.
 <ld/writer-js> a :JsWriterChannel.
 
+
+[] a js:JsChannel;
+  :reader <sds/reader-js>;
+  :writer <sds/writer-js>.
+
+<sds/reader-js> a :JsReaderChannel.
+<sds/writer-js> a :JsWriterChannel.
+
+
 <countryChannel> a :HttpReaderChannel;
   :httpPort 3333.
+
+<metadata/in> a :FileReaderChannel;
+  :fileReadFirstContent "true";
+  :fileOnReplace "true";
+  :filePath <./metadataIn.ttl>.
 
  [] a js:GetRINF; 
    js:countries <countryChannel>;
@@ -50,8 +69,19 @@
   rml:iterator "/RINFData//SOLTrack";
   rml:jarFile <./rml-mapper-6.x.x.jar>.
 
+[] a js:Sdsify;
+  js:input <ld/reader-js>;
+  js:output <sds/writer-js>;
+  js:stream <https://w3id.org/sds#Stream>.
 
- [] a js:Print;
-   js:dataInput <ld/reader-js>.
+[] a js:Ingest;
+  js:dataInput <sds/reader-js>;
+  js:metadataInput <metadata/in>;
+  js:metadataCollection "RINF_META";
+  js:dataCollection "RINF_DATA";
+  js:indexCollection "RINF_INDEX".
+  
+# [] a js:Print;
+#  js:dataInput <sds/reader-js>.
 
 
