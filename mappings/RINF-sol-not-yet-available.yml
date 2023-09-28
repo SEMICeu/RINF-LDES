@@ -1,0 +1,78 @@
+prefixes:
+  era: "http://data.europa.eu/949/"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+
+sources:
+  solNotYetApp-source: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@IsApplicable='NYA' and not(@Set)]"]
+  tds-solNotYetApp-source: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@IsApplicable='NYA' and (@ID='CTD_DetectionSystem' or @ID='CTD_TCCheck' or @ID='CTD_TCCheckDocRef' or @ID='CTD_TCLimitation' or @ID='CTD_TSIMaxDistConsecutiveAxles' or @ID='CTD_MaxDistConsecutiveAxles' or @ID='CTD_MinDistConsecutiveAxles' or @ID='CTD_MinDistFirstLastAxles' or @ID='CTD_MaxDistEndTrainFirstAxle' or @ID='CTD_MinRimWidth' or @ID='CTD_MinWheelDiameter' or @ID='CTD_MinFlangeThickness' or @ID='CTD_MinFlangeHeight' or @ID='CTD_MaxFlangeHeight' or @ID='CTD_MinAxleLoadByVehicleCat' or @ID='CTD_TSIMetalFree' or @ID='CTD_TSIMetalConstruction' or @ID='CTD_TSIFerroWheelMat' or @ID='CTD_TSIMaxImpedanceWheelset' or @ID='CTD_MaxImpedanceWheelset' or @ID='CTD_MaxSandOutput' or @ID='CTD_SandDriverOverride' or @ID='CTD_TSISandCharacteristics' or @ID='CTD_FlangeLubeRules' or @ID='CTD_TSICompositeBrakeBlocks' or @ID='CTD_TSIShuntDevices' or @ID='CTD_TSIRSTShuntImpedance')]"]
+  etcs-solNotYetApp-source: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@IsApplicable='NYA' and (@ID='CPE_Level' or @ID='CPE_Baseline' or @ID='CPE_Infill' or @ID='CPE_InfillLineSide' or @ID='CPE_NatApplication' or @ID='CPE_RestrictionsConditions' or @ID='CPE_OptionalFunctions' or @ID='CPE_IntegrityConfirmation' or @ID='CPE_SystemCompatiblity' or @ID='CPE_MVersion')]"]
+  cls-solNotYetApp-source: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@IsApplicable='NYA' and (@ID='ECS_SystemType' or @ID='ECS_VoltFreq' or @ID='ECS_TSIVoltFreq' or @ID='ECS_Umax2' or @ID='ECS_MaxTrainCurrent' or @ID='ECS_MaxStandstillCurrent' or @ID='ECS_RegenerativeBraking' or @ID='ECS_MaxWireHeight' or @ID='ECS_MinWireHeight')]"]
+mappings:
+  sol-tracks-not-yet-available:
+    sources:
+      - solNotYetApp-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)"
+    po:
+      - p: era:notYetAvailable
+        o:
+          - mapping: index-predicates
+            condition:
+              function: equal
+              parameters:
+                - [str1, "$(@ID)"]
+                - [str2, $(xmlName)]
+    graph: ${NAMED_GRAPH}
+
+# for those properties marked as NYA in the corresponding groupset
+  train-detection-system: # 1.1.1.3.7.1.1 Points to SET parameter-based entity
+    sources:
+      - tds-solNotYetApp-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)_$(@Set)"
+    po:
+      - p: era:notYetAvailable
+        o:
+          - mapping: index-predicates
+            condition:
+              function: equal
+              parameters:
+                - [str1, "$(@ID)"]
+                - [str2, $(xmlName)]
+    graph: ${NAMED_GRAPH}
+
+# for those properties marked as NYA in the corresponding groupset
+  etcs-level: # 1.1.1.3.2.1 points to SET parameter-based entity
+    sources:
+      - etcs-solNotYetApp-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/etcsLevels/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)_$(@Set)"
+    po:
+      - p: era:notYetAvailable
+        o:
+          - mapping: index-predicates
+            condition:
+              function: equal
+              parameters:
+                - [str1, "$(@ID)"]
+                - [str2, $(xmlName)]
+    graph: ${NAMED_GRAPH}
+
+# for those properties marked as NYA in the corresponding groupset
+  contact-line-system: # 1.1.1.2.2.1.1 Points to SET parameter-based entity
+    sources:
+      - cls-solNotYetApp-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/contactLineSystems/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)_$(@Set)"
+    po:
+      - p: era:notYetAvailable
+        o:
+          - mapping: index-predicates
+            condition:
+              function: equal
+              parameters:
+                - [str1, "$(@ID)"]
+                - [str2, $(xmlName)]
+    graph: ${NAMED_GRAPH}
+
+  index-predicates:
+    sources:
+      - ["data/index_predicate_mappings.csv~csv"]
+    s: "$(predicate)"
+    graph: ${NAMED_GRAPH}

@@ -1,0 +1,89 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  era: "http://data.europa.eu/949/"
+  era-tenclass: "http://data.europa.eu/949/concepts/ten-classifications/rinf/"
+  era-ph: "http://data.europa.eu/949/concepts/platform-heights/rinf/"
+
+sources:
+  op_source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPTrack/OPTrackPlatform']
+  op_source-ref: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPTrack']
+
+mappings:
+  platform:
+    sources:
+      - op_source
+    s: http://data.europa.eu/949/funtionalInfrastructure/platforms/$(parent::*/parent::*/UniqueOPID/@Value)_$(OPTrackPlatformIdentification/@Value)
+    po:
+      - [a, era:Platform]
+      - [rdfs:label, $(parent::*/parent::*/UniqueOPID/@Value)_$(OPTrackPlatformIdentification/@Value)]
+      - [era:imCode, $(parent::*/OPTrackIMCode/@Value)] # 1.2.1.0.6.1
+      - [era:platformId, $(OPTrackPlatformIdentification/@Value)] # 1.2.1.0.6.2
+    graph: ${NAMED_GRAPH}
+  
+  platform-reference:
+    sources:
+      - op_source-ref
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/UniqueOPID/@Value)_$(OPTrackIdentification/@Value)
+    po:
+      - [era:platform, http://data.europa.eu/949/funtionalInfrastructure/platforms/$(parent::*/UniqueOPID/@Value)_$(OPTrackPlatform/OPTrackPlatformIdentification/@Value)~iri]
+    graph: ${NAMED_GRAPH}
+  
+  ten-class: # 1.2.1.0.6.3
+    sources:
+      - op_source
+    s: http://data.europa.eu/949/funtionalInfrastructure/platforms/$(parent::*/parent::*/UniqueOPID/@Value)_$(OPTrackPlatformIdentification/@Value)
+    po:
+      - [era:tenClassification, "era-tenclass:$(OPTrackPlatformParameter[@ID='IPL_TENClass' and @IsApplicable='Y']/@Value)~iri"]
+    graph: ${NAMED_GRAPH}
+
+  platform-length: # 1.2.1.0.6.4
+    sources:
+      - op_source
+    s: http://data.europa.eu/949/funtionalInfrastructure/platforms/$(parent::*/parent::*/UniqueOPID/@Value)_$(OPTrackPlatformIdentification/@Value)
+    po:
+      - [era:length, "$(OPTrackPlatformParameter[@ID='IPL_Length' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  platform-height: # 1.2.1.0.6.5
+    sources:
+      - op_source
+    s: http://data.europa.eu/949/funtionalInfrastructure/platforms/$(parent::*/parent::*/UniqueOPID/@Value)_$(OPTrackPlatformIdentification/@Value)
+    po:
+      - [era:platformHeight, "era-ph:$(OPTrackPlatformParameter[@ID='IPL_Height' and @IsApplicable='Y']/@Value)~iri"]
+    graph: ${NAMED_GRAPH}
+  
+  assistance-starting-train: # 1.2.1.0.6.6
+    sources:
+      - op_source
+    s: http://data.europa.eu/949/funtionalInfrastructure/platforms/$(parent::*/parent::*/UniqueOPID/@Value)_$(OPTrackPlatformIdentification/@Value)
+    po:
+      - p: era:assistanceStartingTrain
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPTrackPlatformParameter[@ID='IPL_AssistanceStartingTrain' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:assistanceStartingTrain
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPTrackPlatformParameter[@ID='IPL_AssistanceStartingTrain'and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  area-boarding-aid: # 1.2.1.0.6.7
+    sources:
+      - op_source
+    s: http://data.europa.eu/949/funtionalInfrastructure/platforms/$(parent::*/parent::*/UniqueOPID/@Value)_$(OPTrackPlatformIdentification/@Value)
+    po:
+      - [era:areaBoardingAid, "$(OPTrackPlatformParameter[@ID='IPL_AreaBoardingAid' and @IsApplicable='Y']/@Value)", xsd:integer]
+    graph: ${NAMED_GRAPH}

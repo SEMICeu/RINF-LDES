@@ -1,0 +1,23 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  era: "http://data.europa.eu/949/"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+
+sources:
+  numRaisedSpeed: ["dataset/data.xml~xpath","/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID='EPA_NumRaisedSpeed' and @IsApplicable='Y']"]
+mappings:
+
+  raised-pantograph-distance-speed: # 1.1.1.2.3.3
+    sources:
+      - numRaisedSpeed
+    s: http://data.europa.eu/949/functionalInfrastructure/raisedPantographsDistanceAndSpeed/$(parent::*/parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::*/parent::SectionOfLine/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::SectionOfLine/SOLOPEnd/@Value)_$(replace(@Value,' ','-'\))
+    po:
+      - [a,era:RaisedPantographsDistanceAndSpeed]
+      - [rdfs:label,$(@Value)]
+      - [era:raisedPantographsNumber, "$(substring-before(@Value,' '\))", xsd:integer]
+      - [era:raisedPantographsDistance, "$(substring-before(substring-after(@Value,' '\),' '\))", xsd:integer]
+      - [era:raisedPantographsSpeed, "$(substring-after(substring-after(@Value,' '\),' '\))", xsd:integer]
+#      - [era:raisedPantographsDistanceAndSpeed, "$(SOLTrackParameter[@ID='EPA_NumRaisedSpeed' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}

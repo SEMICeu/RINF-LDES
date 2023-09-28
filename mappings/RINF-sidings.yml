@@ -1,0 +1,314 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  era: "http://data.europa.eu/949/"
+  era-tenclass: "http://data.europa.eu/949/concepts/ten-classifications/rinf/"
+
+sources:
+  op_source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint']
+  siding_source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPSiding']
+  mvc_siding_source: ['dataset/data.xml~xpath',"/RINFData/OperationalPoint/OPSiding/OPSidingParameter[@ID='ILL_MinRadVertCurve' and @IsApplicable='Y']"]
+
+mappings:
+  siding:
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - [a, era:Siding]
+      - [rdfs:label, $(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)]
+      - [era:imCode, $(OPSidingIMCode/@Value)] # 1.2.2.0.0.1
+      - [era:sidingId, $(OPSidingIdentification/@Value)] # 1.2.2.0.0.2
+    graph: ${NAMED_GRAPH}
+
+  link-siding-to-operational-point:
+    sources:
+      - op_source
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - [era:siding, http://data.europa.eu/949/functionalInfrastructure/sidings/$(UniqueOPID/@Value)_$(OPSiding/OPSidingIdentification/@Value)~iri]
+    graph: ${NAMED_GRAPH}
+
+  # ------------ Generic information --------------
+
+  ten-class: # 1.2.2.0.0.3
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - [era:tenClassification, "era-tenclass:$(OPSidingParameter[@ID='IPP_TENClass' and @IsApplicable='Y']/@Value)~iri"]
+    graph: ${NAMED_GRAPH}
+
+  # ------------ Declarations of verification for siding --------------
+
+  ec-verification: # 1.2.2.0.1.1
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - [era:verificationINF, "$(OPSiding/OPSidingParameter[@ID='IDE_ECVerification' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+
+  ei-demonstration: # 1.2.2.0.1.2
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - [era:demonstrationINF, "$(OPSidingParameter[@ID='IDE_EIDemonstration' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+
+  # ------------ Performance parameters --------------
+
+  siding-length: # 1.2.2.0.2.1
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - [era:length, "$(OPSidingParameter[@ID='IPP_Length' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  # ------------ Line layout --------------
+
+  siding-gradient: # 1.2.2.0.3.1
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - [era:gradient, "$(OPSidingParameter[@ID='ILL_Gradient' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  min-radius-horizontal: # 1.2.2.0.3.2
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - [era:minimumHorizontalRadius, "$(OPSidingParameter[@ID='ILL_MinRadHorzCurve' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  min-radius-vertical: # 1.2.2.0.3.3
+    sources:
+      - mvc_siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::*/parent::OperationalPoint/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)
+    po:
+#      - [era:minimumVerticalRadius, "$(OPSidingParameter[@ID='ILL_MinRadVertCurve' and @IsApplicable='Y']/@Value)"]
+      - [era:MinimumVerticalRadiusCrest,"$(substring-before(@Value,'+'\))"]
+      - [era:MinimumVerticalRadiusHollow,"$(substring-after(@Value,'+'\))"]
+    graph: ${NAMED_GRAPH}
+
+  # ------------ TS / Fixed installations for servicing trains --------------
+
+  toilet-discharge: # 1.2.2.0.4.1
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - p: era:hasToiletDischarge
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_ToiletDischarge' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasToiletDischarge
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_ToiletDischarge' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasToiletDischarge
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_ToiletDischarge']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  external-cleaning: # 1.2.2.0.4.2
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - p: era:hasExternalCleaning
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_ExternalCleaning' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasExternalCleaning
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_ExternalCleaning' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasExternalCleaning
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_ExternalCleaning']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  water-restocking: # 1.2.2.0.4.3
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - p: era:hasWaterRestocking
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_WaterRestocking' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasWaterRestocking
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_WaterRestocking' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasWaterRestocking
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_WaterRestocking']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  refuelling: # 1.2.2.0.4.4
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - p: era:hasRefuelling
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_Refuelling' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasRefuelling
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_Refuelling' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasRefuelling
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_Refuelling']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  sand-restocking: # 1.2.2.0.4.5
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - p: era:hasSandRestocking
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_SandRestocking' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasSandRestocking
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_SandRestocking' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasSandRestocking
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_SandRestocking']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  electric-shore-supply: # 1.2.2.0.4.6
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - p: era:hasElectricShoreSupply
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_ElectricShoreSupply' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasElectricShoreSupply
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_ElectricShoreSupply' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+      - p: era:hasElectricShoreSupply
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingParameter[@ID='ITS_ElectricShoreSupply']/@IsApplicable)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  # ------------ Contact line system --------------
+
+  max-standstill-current: # 1.2.2.0.6.1
+    sources:
+      - siding_source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::OperationalPoint/UniqueOPID/@Value)_$(OPSidingIdentification/@Value)
+    po:
+      - [era:maxCurrentStandstillPantograph, "$(OPSidingParameter[@ID='ECS_MaxStandstillCurrent' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}

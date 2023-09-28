@@ -1,0 +1,38 @@
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix fno: <https://w3id.org/function/ontology#>.
+@prefix fnom: <https://w3id.org/function/vocabulary/mapping#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+js:Buffer a js:JsProcess;
+  js:file <./lib/Processor.js>;
+  js:function "buffer";
+  js:location <./>;
+  js:mapping [
+    a fno:Mapping;
+    fno:parameterMapping [
+      a fnom:PositionParameterMapping;
+      fnom:functionParameter "Data input";
+      fnom:implementationParameterPosition "0"^^xsd:int;
+    ], [
+      a fnom:PositionParameterMapping;
+      fnom:functionParameter "Data output";
+      fnom:implementationParameterPosition "1"^^xsd:int;
+    ];
+  ].
+
+[ ] a sh:NodeShape;
+  sh:targetClass js:Buffer;
+  sh:property [
+    sh:class :ReaderChannel;
+    sh:path js:input;
+    sh:name "Data input";
+  ], [
+    sh:class :WriterChannel;
+    sh:path js:output;
+    sh:name "Data output";
+    sh:maxCount 1;
+  ].
+

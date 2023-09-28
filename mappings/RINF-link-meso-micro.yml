@@ -1,0 +1,71 @@
+prefixes:
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  eu-country: "http://publications.europa.eu/resource/authority/country/"
+  era: "http://data.europa.eu/949/"
+
+
+sources:
+  xml-source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine']
+  xml-source-root: ['dataset/data.xml~xpath','/RINFData']
+  xml-op-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint']
+  xml-op-source-no-out: ['dataset/internal-node-link-no-out.xml~xpath','/RINFData/netElement']
+  xml-op-source-no-in: ['dataset/internal-node-link-no-in.xml~xpath','/RINFData/netElement']
+  xml-op-source-in-out: ['dataset/internal-node-link-in-out.xml~xpath','/RINFData/netElement']
+mappings:
+
+  # ------------Define which Micro NetElements belong inside Meso NetElements--------------
+
+  aggregation-sol-tracks:
+    sources:
+      - xml-source
+#    s: http://data.europa.eu/949/topology/netElements/$(UICCode)_$(FROM_NODE)_$(TO_NODE)
+    s: http://data.europa.eu/949/topology/netElements/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)
+    po:
+#      - [era:elementPart, http://data.europa.eu/949/topology/netElements/$(UICCode)_$(FROM_NODE)_$(UUID)_$(TO_NODE)~iri]
+      - [era:elementPart, http://data.europa.eu/949/topology/netElements/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLTrack/SOLTrackIdentification/@Value)_$(SOLOPEnd/@Value)~iri]
+    graph: ${NAMED_GRAPH}
+
+  aggregation-internal-node-link-in-out:
+    sources:
+      - xml-op-source-in-out
+#    s: http://data.europa.eu/949/topology/netElements/$(UOPID)
+    s: http://data.europa.eu/949/topology/netElements/$(UOPID/UniqueOPID/@Value)
+    po:
+      - [era:elementPart, http://data.europa.eu/949/topology/netElements/$(INCOMING_LINE/@Value)_$(INCOMING_REMOTE_OP/@Value)_$(INCOMING/@Value)_$(UOPID/UniqueOPID/@Value)_$(OUTGOING/@Value)_$(OUTGOING_REMOTE_OP/@Value)_$(OUTGOING_LINE/@Value)~iri]
+#      - [era:elementPart, "http://data.europa.eu/949/topology/netElements/$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPEnd/@Value=$op and //SectionOfLine[SOLOPStart/@Value=$op] ]/SOLLineIdentification/@Value\))_$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPEnd/@Value=$op and //SectionOfLine[SOLOPStart/@Value=$op]]/SOLOPStart/@Value\))_$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPEnd/@Value=$op and //SectionOfLine[SOLOPStart/@Value=$op]]/SOLTrack/SOLTrackIdentification/@Value\))_$(UniqueOPID/@Value)_$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPStart/@Value=$op and //SectionOfLine[SOLOPEnd/@Value=$op]]/SOLTrack/SOLTrackIdentification/@Value\))_$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPStart/@Value=$op and //SectionOfLine[SOLOPEnd/@Value=$op]]/SOLOPEnd/@Value\))_$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPStart/@Value=$op and //SectionOfLine[SOLOPEnd/@Value=$op]]/SOLLineIdentification/@Value\))~iri"]
+    graph: ${NAMED_GRAPH}
+
+
+  aggregation-internal-node-link-no-out:
+    sources:
+      - xml-op-source-no-out
+    s: http://data.europa.eu/949/topology/netElements/$(UOPID/UniqueOPID/@Value)
+    po:
+      - [era:elementPart, http://data.europa.eu/949/topology/netElements/$(INCOMING_LINE/@Value)_$(INCOMING_REMOTE_OP/@Value)_$(INCOMING/@Value)_$(UOPID/UniqueOPID/@Value)_$(OUTGOING/@Value)_$(OUTGOING_REMOTE_OP/@Value)_$(OUTGOING_LINE/@Value)~iri]
+    graph: ${NAMED_GRAPH}
+
+  aggregation-internal-node-link-no-in:
+    sources:
+      -  xml-op-source-no-in
+#        query: SELECT UICLines2.UICCode AS INCOMING_LINE, (SELECT LTRIM(RTRIM(UOPID)) FROM RINF.dbo.OperationalPoints, RINF.dbo.LineNodes WHERE LineNodes.OperationalPointID = OperationalPoints.ID AND LineNodes.ID = LineEdges2.LineNodeEndID AND OperationalPoints.VersionID=LineNodes.VersionID) AS INCOMING_REMOTE_OP, Tracks2.UUID AS INCOMING, LookupValues2.[Value] AS INCOMING_DIRECTION, LTRIM(RTRIM(OP2.UOPID)) AS UOPID, Tracks1.UUID AS OUTGOING, LookupValues1.[Value] AS OUTGOING_DIRECTION, (SELECT LTRIM(RTRIM(UOPID)) FROM RINF.dbo.OperationalPoints, RINF.dbo.LineNodes WHERE LineNodes.OperationalPointID = OperationalPoints.ID AND LineNodes.ID = LineEdges1.LineNodeEndID AND OperationalPoints.VersionID=LineNodes.VersionID) AS OUTGOING_REMOTE_OP, UICLines1.UICCode AS OUTGOING_LINE FROM RINF.dbo.Tracks AS Tracks2, RINF.dbo.SOLTracks AS SOLTracks2, RINF.dbo.SectionOfLines AS SectionOfLines2, RINF.dbo.LookupValues AS LookupValues2, RINF.dbo.UICLines AS UICLines2, RINF.dbo.Tracks AS Tracks1, RINF.dbo.SOLTracks AS SOLTracks1, RINF.dbo.SectionOfLines AS SectionOfLines1, RINF.dbo.LookupValues AS LookupValues1, RINF.dbo.UICLines AS UICLines1, RINF.dbo.LineEdges AS LineEdges2, RINF.dbo.LineEdges AS LineEdges1, RINF.dbo.LineNodes AS LineNodes1, RINF.dbo.LineNodes AS LineNodes2, RINF.dbo.OperationalPoints AS OP1, RINF.dbo.OperationalPoints AS OP2, RINF.dbo.LookupValues, RINF.dbo.MemberStateVersions, RINF.dbo.MemberStates WHERE Tracks2.ID = SOLTracks2.TrackID AND Tracks2.VersionID = SOLTracks2.VersionID AND SOLTracks2.Direction = LookupValues2.ID AND SOLTracks2.SectionOfLineID = SectionOfLines2.ID AND SectionOfLines2.UICLineID = UICLines2.ID AND SectionOfLines2.VersionID = UICLines2.VersionID AND SectionOfLines2.LineEdgeID = LineEdges2.ID AND Tracks2.VersionID = LineEdges2.VersionID AND Tracks1.ID = SOLTracks1.TrackID AND Tracks1.VersionID = SOLTracks1.VersionID AND SOLTracks1.Direction = LookupValues1.ID AND SOLTracks1.SectionOfLineID = SectionOfLines1.ID AND SectionOfLines1.UICLineID = UICLines1.ID AND SectionOfLines1.VersionID = UICLines1.VersionID AND SectionOfLines1.LineEdgeID = LineEdges1.ID AND Tracks1.VersionID = LineEdges1.VersionID AND Tracks2.ID != Tracks1.ID AND LineEdges2.LineNodeStartID = LineNodes2.ID AND LineEdges2.VersionID = LineNodes2.VersionID AND LineEdges1.LineNodeStartID = LineNodes1.ID AND LineEdges1.VersionID = LineNodes1.VersionID AND LineNodes2.OperationalPointID = OP2.ID AND LineNodes1.OperationalPointID = OP1.ID AND LineNodes2.VersionID = OP2.VersionID AND LineNodes1.VersionID = OP1.VersionID AND SectionOfLines2.VersionID = MemberStateVersions.ID AND MemberStateVersions.MemberStateID = MemberStates.ID AND OP2.UOPID = OP1.UOPID AND OP1.[Type] = LookupValues.ID AND OP2.[Type] = LookupValues.ID AND OP1.UOPID NOT IN ('NLBHV', 'NLBKLA', 'NLBKP', 'NLBLOA', 'NLDB', 'NLDLD', 'NLHMLA', 'NLMAS', 'NLUT', 'NLUTZA', 'NLVTN');
+    s: http://data.europa.eu/949/topology/netElements/$(UOPID/UniqueOPID/@Value)
+    po:
+#      - [era:elementPart, "http://data.europa.eu/949/topology/netElements/$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPStart/@Value=$op]/SOLLineIdentification/@Value\))_$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPStart/@Value=$op]/SOLOPEnd/@Value\))_$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPStart/@Value=$op]/SOLTrack/SOLTrackIdentification/@Value\))_$(UniqueOPID/@Value)_$(let $op:=UniqueOPID/@Value return(reverse(//SectionOfLine[SOLOPStart/@Value=$op]/SOLTrack/SOLTrackIdentification/@Value\)\))_$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPStart/@Value=$op]/SOLOPEnd/@Value\))_$(let $op:=UniqueOPID/@Value return(//SectionOfLine[SOLOPStart/@Value=$op]/SOLLineIdentification/@Value\))~iri"]
+      - [era:elementPart, http://data.europa.eu/949/topology/netElements/$(INCOMING_LINE/@Value)_$(INCOMING_REMOTE_OP/@Value)_$(INCOMING/@Value)_$(UOPID/UniqueOPID/@Value)_$(OUTGOING/@Value)_$(OUTGOING_REMOTE_OP/@Value)_$(OUTGOING_LINE/@Value)~iri]
+    graph: ${NAMED_GRAPH}
+
+  aggregation-internal-node-link-connectivity-table:
+    sources:
+      - ["data/op_internal_connectivity.csv~csv"]
+    s: http://data.europa.eu/949/topology/netElements/$(UOPID)
+    condition:
+      function: idlab-fn:equal
+      parameters:
+        - [grel:valueParameter, $(Connected)]
+        - [grel:valueParameter2, "YES"]
+    po:
+      - [era:elementPart, http://data.europa.eu/949/topology/netElements/$(INCOMING_LINE)_$(INCOMING_REMOTE_OP)_$(INCOMING)_$(UOPID)_$(OUTGOING)_$(OUTGOING_REMOTE_OP)_$(OUTGOING_LINE)~iri]
+    graph: ${NAMED_GRAPH}

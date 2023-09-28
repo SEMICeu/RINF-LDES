@@ -21,7 +21,7 @@ mappings:
   operational-point:
     sources:
       - op-source
-    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID[not(matches(@Value,'^EU0'\)\)]/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
     po:
       - [a, era:OperationalPoint]
       - [era:canonicalURI,"http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID/@Value)~iri"]
@@ -48,12 +48,23 @@ mappings:
                 - [str2, $(code)]
     graph: ${NAMED_GRAPH}
 
+  general-operational-border-point: # general information of BorderPoints
+    sources:
+      - op-source
+    s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(UniqueOPID[matches(@Value,'^EU0'\)]/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
+    po:
+      - [a, era:OperationalPoint]
+      - [era:tafTAPCode,"$(OPTafTapCode[@IsApplicable='Y']/@Value)"] # 1.2.0.0.0.3
+      - [era:uopid, $(UniqueOPID/@Value)] # 1.2.0.0.0.2
+      - [era:opInfoPerCountry, "http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(parent::*/MemberStateCode/@Code)/$(UniqueOPID[matches(@Value,'^EU0'\)]/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])~iri"] # BorderPoints
+    graph: ${NAMED_GRAPH}
+
   operational-border-point: # BorderPoints
     sources:
       - op-source
     s: http://data.europa.eu/949/functionalInfrastructure/operationalPoints/$(parent::*/MemberStateCode/@Code)/$(UniqueOPID[matches(@Value,'^EU0'\)]/@Value)/$((@ValidityDateStart,'0000-00-00'\)[1])_$((@ValidityDateEnd,'0000-00-00'\)[1])
     po:
-      - [a, era:BorderPoint]
+      - [a, era:OperationalPoint]
       - [rdfs:label, $(OPName/@Value)]
       - [era:opName, $(OPName/@Value)] # 1.2.0.0.0.1
       - [era:uopid, $(UniqueOPID/@Value)] # 1.2.0.0.0.2

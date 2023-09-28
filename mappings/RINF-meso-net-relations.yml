@@ -1,0 +1,35 @@
+prefixes:
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  eu-country: "http://publications.europa.eu/resource/authority/country/"
+  era: "http://data.europa.eu/949/"
+
+sources:  
+  sol_source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine']
+  op_source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint']
+
+mappings:
+
+  # ----------------------Define Meso NetRelations---------------------
+
+  sol-start:
+    sources:
+      - sol_source
+    s: http://data.europa.eu/949/topology/netRelations/$(SOLOPStart/@Value)_$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)    
+    po:
+      - [a, era:NetRelation]
+      - [era:elementA, http://data.europa.eu/949/topology/netElements/$(SOLOPStart/@Value)~iri]      
+      - [era:elementB, http://data.europa.eu/949/topology/netElements/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)~iri]      
+    graph: ${NAMED_GRAPH}
+
+  sol-end:
+    sources:
+      - sol_source
+    s: http://data.europa.eu/949/topology/netRelations/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)_$(SOLOPEnd/@Value)
+    po:
+      - [a, era:NetRelation]
+      - [era:elementA, http://data.europa.eu/949/topology/netElements/$(SOLLineIdentification/@Value)_$(SOLOPStart/@Value)_$(SOLOPEnd/@Value)~iri]
+      - [era:elementB, http://data.europa.eu/949/topology/netElements/$(SOLOPEnd/@Value)~iri]
+    graph: ${NAMED_GRAPH}

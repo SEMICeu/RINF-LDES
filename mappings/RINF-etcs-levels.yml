@@ -1,0 +1,33 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  era: "http://data.europa.eu/949/"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  era-etcslevel: "http://data.europa.eu/949/concepts/etcs-levels/rinf/"
+  era-etcsbaseline: "http://data.europa.eu/949/concepts/etcs-baselines/rinf/"
+
+sources:
+#  etcs-levels-source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine']
+  source-etcs-level: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID='CPE_Level' and @IsApplicable='Y']"]
+  source-etcs-baseline: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID='CPE_Baseline' and @IsApplicable='Y']"]
+# Example:
+#http://data.europa.eu/949/functionalInfrastructure/etcsLevels/PL0051032_PL07323_N_PL02442_N
+mappings:
+  etcs-level: # 1.1.1.3.2.1 points to SET parameter-based entity
+    sources: 
+      - source-etcs-level
+    s: "http://data.europa.eu/949/functionalInfrastructure/etcsLevels/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)_$(@Set)"  ## TODO: It use GroupSet
+    po:
+      - [a, era:ETCSLevel]
+      - [rdfs:label, $(@Set)]
+      - [era:etcsLevelType, "era-etcslevel:$(@Value)~iri"] ## Value: skos_code
+    graph: ${NAMED_GRAPH}
+  
+  etcs-baseline: # 1.1.1.3.2.2
+    sources:
+      - source-etcs-baseline
+    s: "http://data.europa.eu/949/functionalInfrastructure/etcsLevels/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)_$(@Set)"  ## TODO: It use GroupSet
+    po:
+      - [era:etcsBaseline, "era-etcsbaseline:$(@Value)~iri"] ## Value: skos_code
+    graph: ${NAMED_GRAPH}

@@ -1,0 +1,23 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  era: "http://data.europa.eu/949/"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  era-lc: "http://data.europa.eu/949/concepts/load-capability-line-categories/rinf/"
+
+
+sources:
+  load_capability_source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID="IPP_LoadCap" and @IsApplicable="Y"]']
+
+mappings:
+
+  load-capability: # 1.1.1.1.2.4
+    sources:
+      - load_capability_source
+    s: "http://data.europa.eu/949/functionalInfrastructure/load-capabilities/$(parent::SOLTrack/parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPStart/@Value)_$(parent::SOLTrack/SOLTrackIdentification/@Value)_$(parent::SOLTrack/parent::SectionOfLine/SOLOPEnd/@Value)_$(replace(@Value,' ','-'\))"
+    po:
+      - [a, era:LoadCapability]
+      - [era:loadCapabilitySpeed,"$(substring-after(@Value,' '\))", xsd:integer]
+      - [era:loadCapabilityLineCategory,"era-lc:$(substring-before(@Value,' '\))~iri"]
+    graph: ${NAMED_GRAPH}

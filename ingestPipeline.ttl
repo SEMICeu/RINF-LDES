@@ -1,0 +1,76 @@
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+<> owl:imports <./node_modules/@ajuvercr/js-runner/ontology.ttl>,
+  <./node_modules/@ajuvercr/js-runner/channels/file.ttl>,
+  <./node_modules/sds-processors/configs/yarrrml.ttl>,
+  <./node_modules/sds-processors/configs/sdsify.ttl>,
+  <./node_modules/sds-processors/configs/bucketizer.ttl>,
+  <./node_modules/sds-processors/configs/ldesify.ttl>,
+  <./node_modules/@treecg/sds-storage-writer-mongo/step.ttl>.
+
+<data> a :FileReaderChannel;
+  :fileReadFirstContent "true";
+  :fileOnReplace "true";
+  :filePath <./output.txt>.
+
+<ldes-raw/reader> a js:JsReaderChannel.
+<ldes-raw/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <ldes-raw/reader>;
+  :writer <ldes-raw/writer>.
+
+<sds-raw/reader> a js:JsReaderChannel.
+<sds-raw/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <sds-raw/reader>;
+  :writer <sds-raw/writer>.
+
+[ ] a js:Ldesify;
+  js:input <data>;
+  js:output <ldes-raw/writer>;
+  js:path <./save.json>.
+
+[ ] a js:Sdsify;
+  js:input <ldes-raw/reader>;
+  js:output <sds-raw/writer>;
+  js:stream <https://w3id.org/sds#Stream>.
+
+<metadata/in> a :FileReaderChannel;
+  :fileReadFirstContent "true";
+  :fileOnReplace "true";
+  :filePath <./metadataIn.ttl>.
+
+[ ] a js:Bucketize;
+  js:dataInput <sds-raw/reader>;
+  js:metadataInput <metadata/in>;
+  js:dataOutput <buckets/writer>;
+  js:metadataOutput <meta/buckets/writer>;
+  js:bucketizeStrategy <./bucketizeStrategy.ttl>;
+  js:inputStreamId <https://w3id.org/sds#Stream>;
+  js:outputStreamId <http://example.com/test>.
+
+<meta/buckets/reader> a js:JsReaderChannel.
+<meta/buckets/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <meta/buckets/reader>;
+  :writer <meta/buckets/writer>.
+
+<buckets/reader> a js:JsReaderChannel.
+<buckets/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <buckets/reader>;
+  :writer <buckets/writer>.
+
+[ ] a js:Ingest;
+  js:dataInput <buckets/reader>;
+  js:metadataInput <meta/buckets/reader>;
+  js:database [
+    js:url "mongodb://127.0.0.1:27017/rinftest";
+    js:metadata "META";
+    js:data "DATA";
+    js:index "INDEX";
+  ];
+  js:indexCollection true.
+

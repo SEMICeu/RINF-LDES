@@ -1,0 +1,465 @@
+prefixes:
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  wgs: "http://www.w3.org/2003/01/geo/wgs84_pos#"
+  geosparql: "http://www.opengis.net/ont/geosparql#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  era: "http://data.europa.eu/949/"
+  era-rsf: "http://data.europa.eu/949/concepts/rolling-stock-fire/rinf/"
+
+sources:
+  SOLTunnel-source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine/SOLTrack/SOLTunnel']
+  OPTrackTunnel-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPTrack/OPTrackTunnel']
+  OPSidingTunnel-source: ['dataset/data.xml~xpath','/RINFData/OperationalPoint/OPSiding/OPSidingTunnel']
+  solTunnRef-source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine/SOLTrack/SOLTunnel']
+
+
+
+mappings:
+  sol-tunnel:
+    sources:
+      - SOLTunnel-source
+    #s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(TUNNEL_URI)_$(StartLong)$(StartLat)_$(EndLong)$(EndLat)
+    s: "http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)"
+    po:
+      - [a, era:Tunnel]
+      - [rdfs:label, $(SOLTunnelIdentification/@Value)]
+      - [era:imCode, $(SOLTunnelIMCode/@Value)] # 1.1.1.1.8.1
+      - [era:tunnelIdentification, $(SOLTunnelIdentification/@Value)] # 1.1.1.1.8.2
+      - [era:startLocation, "http://data.europa.eu/949/locations/$(SOLTunnelStart/@Longitude)/$(SOLTunnelStart/@Latitude)~iri"] # 1.1.1.1.8.3
+      - [era:endLocation, "http://data.europa.eu/949/locations/$(SOLTunnelEnd/@Longitude)/$(SOLTunnelEnd/@Latitude)~iri"] # 1.1.1.1.8.4
+      - [era:netElement, http://data.europa.eu/949/topology/netElements/$(parent::*/parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::*/parent::SectionOfLine/SOLOPStart/@Value)_$(parent::*/parent::SectionOfLine/SOLTrack/SOLTrackIdentification/@Value)_$(parent::*/parent::SectionOfLine/SOLOPEnd/@Value)~iri]
+      - p: era:inCountry
+        o:
+          - mapping: eu-country
+            condition:
+              function: equal
+              parameters:
+                - [str1, $(parent::*/parent::*/parent::RINFData/MemberStateCode/@Code)]
+                - [str2, $(code)]
+    graph: ${NAMED_GRAPH}
+
+  op-track-tunnel:
+    sources:
+      - OPTrackTunnel-source
+       #s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(UOPID)_$(TRACK_ID)_$(TUNNEL_URI)
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::OperationalPoint/UniqueOPID/@Value)_$(parent::OPTrack/OPTrackIdentification/@Value)_$(OPTrackTunnelIdentification/@Value)
+    po:
+      - [a, era:Tunnel]
+      - [rdfs:label, $(OPTrackTunnelIdentification/@Value)]
+      - [era:imCode, $(OPTrackTunnelIMCode/@Value)] # 1.2.1.0.5.1
+      - [era:tunnelIdentification, $(OPTrackTunnelIdentification/@Value)] # 1.2.1.0.5.2
+      - p: era:inCountry
+        o:
+          - mapping: eu-country
+            condition:
+              function: equal
+              parameters:
+                - [str1, $(parent::*/parent::*/parent::RINFData/MemberStateCode/@Code)]
+                - [str2, $(code)]
+    graph: ${NAMED_GRAPH}
+
+  siding-tunnel:
+    sources:
+      - OPSidingTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)_$(OPSidingTunnelIdentification/@Value)
+    po:
+      - [a, era:Tunnel]
+      - [rdfs:label, $(OPSidingTunnelIdentification/@Value)]
+      - [era:imCode, $(OPSidingTunnelIMCode/@Value)] # 1.2.2.0.5.1
+      - [era:tunnelIdentification, $(OPSidingTunnelIdentification/@Value)] # 1.2.2.0.5.2
+      - p: era:inCountry
+        o:
+          - mapping: eu-country
+            condition:
+              function: equal
+              parameters:
+                - [str1, $(parent::*/parent::*/parent::RINFData/MemberStateCode/@Code)]
+                - [str2, $(code)]
+    graph: ${NAMED_GRAPH}
+  
+  sol-tunnel-reference:
+    sources:
+      - solTunnRef-source
+    #s: http://data.europa.eu/949/topology/netElements/$(UICCode)_$(FROM_NODE)_$(TRACK_ID)_$(TO_NODE)
+    s: http://data.europa.eu/949/topology/netElements/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::SOLTrack/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)
+    po:
+      - [era:passesThroughTunnel, http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(SOLTunnelIdentification/@Value)_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)~iri]
+    graph: ${NAMED_GRAPH}
+
+  op-track-tunnel-reference:
+    sources:
+      - OPTrackTunnel-source
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)
+    po:
+      - [era:passesThroughTunnel, http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)_$(OPTrackTunnelIdentification/@Value)~iri]
+    graph: ${NAMED_GRAPH}
+
+  siding-tunnel-reference:
+    sources:
+      - OPSidingTunnel-source
+    s: http://data.europa.eu/949/functionalInfrastructure/sidings/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)
+    po:
+      - [era:passesThroughTunnel, http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)_$(OPSidingTunnelIdentification/@Value)~iri]
+    graph: ${NAMED_GRAPH}
+  
+  start-location: # Only available for SoL tunnels
+    sources:
+      - SOLTunnel-source
+    s: "http://data.europa.eu/949/locations/$(SOLTunnelStart/@Longitude)/$(SOLTunnelStart/@Latitude)"
+    po:
+      - [a, wgs:Point]
+      - [a, geosparql:Geometry]
+      - [wgs:lat, "$(SOLTunnelStart/@Latitude)", xsd:double]
+      - [wgs:long, "$(SOLTunnelStart/@Longitude)", xsd:double]
+      - [geosparql:asWKT, "POINT ($(SOLTunnelStart/@Longitude) $(SOLTunnelStart/@Latitude))", geosparql:wktLiteral]
+    graph: ${NAMED_GRAPH}
+  
+  end-location: # Only available for SoL tunnels
+    sources:
+      - SOLTunnel-source
+    s: "http://data.europa.eu/949/locations/$(SOLTunnelEnd/@Longitude)/$(SOLTunnelEnd/@Latitude)"
+    po:
+      - [a, wgs:Point]
+      - [a, geosparql:Geometry]
+      - [wgs:lat, "$(SOLTunnelEnd/@Latitude)", xsd:double]
+      - [wgs:long, "$(SOLTunnelEnd/@Longitude)", xsd:double]
+      - [geosparql:asWKT, "POINT ($(SOLTunnelEnd/@Longitude) $(SOLTunnelEnd/@Latitude))", geosparql:wktLiteral]
+    graph: ${NAMED_GRAPH}
+  
+  eu-country:
+    sources:
+      - ["data/countries.csv~csv"]
+    s: $(eu)
+
+  # -------------------SoL Tunnel----------------------
+
+  verification: # 1.1.1.1.8.5
+    sources:
+      - SOLTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)
+    po:
+      - [era:verificationSRT, "$(SOLTunnelParameter[@ID='ITU_ECVerification' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+
+  demonstration: # 1.1.1.1.8.6
+    sources:
+      - SOLTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)
+    po:
+      - [era:demonstrationSRT, "$(SOLTunnelParameter[@ID='ITU_EIDemonstration' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+
+  length: # 1.1.1.1.8.7
+    sources:
+      - SOLTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)
+    po:
+      - [era:length, "$(SOLTunnelParameter[@ID='ITU_Length' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  cross-section-area: # 1.1.1.1.8.8
+    sources:
+      - SOLTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)
+    po:
+      - [era:crossSectionArea, "$(SOLTunnelParameter[@ID='ITU_CrossSectionArea' and @IsApplicable='Y']/@Value)", xsd:integer]
+    graph: ${NAMED_GRAPH}
+
+  compliance-inf-tsi: # 1.1.1.1.8.8.1
+    sources:
+      - SOLTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)
+    po:
+      - p: era:complianceInfTsi
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTunnelParameter[@ID='ITU_TSITunnel' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:complianceInfTsi
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter,"$(SOLTunnelParameter[@ID='ITU_TSITunnel' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+      
+
+  document-reference: # 1.1.1.1.8.8.2
+    sources:
+      - SOLTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)
+    po:
+      - [era:tunnelDocRef, "$(SOLTunnelParameter[@ID='ITU_TunnelDocRef' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+
+  emergency-plan: # 1.1.1.1.8.9
+    sources:
+      - SOLTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)
+    po:
+      - p: era:hasEmergencyPlan
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTunnelParameter[@ID='ITU_EmergencyPlan' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasEmergencyPlan
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTunnelParameter[@ID='ITU_EmergencyPlan' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  required-rolling-stock-fire-category: # 1.1.1.1.8.10
+    sources:
+      - SOLTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)
+    po:
+      - p: era:rollingStockFireCategory
+        o: era-rsf:a~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTunnelParameter[@ID='ITU_FireCatReq' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] # A
+      - p: era:rollingStockFireCategory
+        o: era-rsf:b~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter,  "$(SOLTunnelParameter[@ID='ITU_FireCatReq' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] # B
+      - p: era:rollingStockFireCategory
+        o: era-rsf:none~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter,  "$(SOLTunnelParameter[@ID='ITU_FireCatReq' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "30"] # none
+    graph: ${NAMED_GRAPH}
+
+
+  sol-required-national-rolling-stock-fire-category: # 1.1.1.1.8.11
+    sources:
+      - SOLTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(replace(SOLTunnelIdentification/@Value,' ','_'\))_$(SOLTunnelStart/@Longitude)$(SOLTunnelStart/@Latitude)_$(SOLTunnelEnd/@Longitude)$(SOLTunnelEnd/@Latitude)
+    po:
+      - [era:nationalRollingStockFireCategory, "$(SOLTunnelParameter[@ID='ITU_NatFireCatReq' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+
+  # -------------------OP Track Tunnel----------------------
+
+  opt-verification: # 1.2.1.0.5.3
+    sources:
+      - OPTrackTunnel-source
+    #s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(UOPID)_$(TRACK_ID)_$(TUNNEL_URI)
+    s: "http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)_$(OPTrackTunnelIdentification/@Value)"
+    po:
+      - [era:verificationSRT, "$(OPTrackTunnelParameter[@ID='ITU_ECVerification' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+  
+  opt-demonstration: # 1.2.1.0.5.4
+    sources:
+      - OPTrackTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)_$(OPTrackTunnelIdentification/@Value)
+    po:
+      - [era:demonstrationSRT,  "$(OPTrackTunnelParameter[@ID='ITU_EIDemonstration' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+  
+  opt-length: # 1.2.1.0.5.5
+    sources:
+      - OPTrackTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)_$(OPTrackTunnelIdentification/@Value)
+    po:
+      - [era:length, "$(OPTrackTunnelParameter[@ID='ITU_Length' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  opt-emergency-plan: # 1.2.1.0.5.6
+    sources:
+      - OPTrackTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)_$(OPTrackTunnelIdentification/@Value)
+    po:
+      - p: era:hasEmergencyPlan
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPTrackTunnelParameter[@ID='ITU_EmergencyPlan' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasEmergencyPlan
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPTrackTunnelParameter[@ID='ITU_EmergencyPlan' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+  
+  opt-required-rolling-stock-fire-category: # 1.2.1.0.5.7
+    sources:
+      - OPTrackTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)_$(OPTrackTunnelIdentification/@Value)
+    po:
+      - p: era:rollingStockFireCategory
+        o: era-rsf:a~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPTrackTunnelParameter[@ID='ITU_FireCatReq' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] # A
+      - p: era:rollingStockFireCategory
+        o: era-rsf:b~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPTrackTunnelParameter[@ID='ITU_FireCatReq' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] # B
+      - p: era:rollingStockFireCategory
+        o: era-rsf:none~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPTrackTunnelParameter[@ID='ITU_FireCatReq' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "30"] # none
+    graph: ${NAMED_GRAPH}
+
+  opt-required-national-rolling-stock-fire-category: # 1.2.1.0.5.8
+    sources:
+      - OPTrackTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)_$(OPTrackTunnelIdentification/@Value)
+    po:
+      - [era:nationalRollingStockFireCategory, "$(OPTrackTunnelParameter[@ID='ITU_NatFireCatReq' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+  
+  opt-diesel-therm-allowed: # 1.2.1.0.5.9
+    sources:
+      - OPTrackTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)_$(OPTrackTunnelIdentification/@Value)
+    po:
+      - p: era:dieselThermalAllowed
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPTrackTunnelParameter[@ID='ITU_DieselThermAllowed' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:dieselThermalAllowed
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPTrackTunnelParameter[@ID='ITU_DieselThermAllowed' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  # -------------------Sidings Tunnel----------------------
+  
+  siding-verification: # 1.2.2.0.5.3 (No data in DB!)
+    sources:
+      - OPSidingTunnel-source
+    #s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(UOPID)_$(SIDING_ID)_$(TUNNEL_URI)
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)_$(OPSidingTunnelIdentification/@Value)
+    po:
+      - [era:verificationSRT, "$(OPSidingTunnelParameter[@ID='ITU_ECVerification' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+  
+  siding-demonstration: # 1.2.2.0.5.4 (No data in DB!)
+    sources:
+      - OPSidingTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)_$(OPSidingTunnelIdentification/@Value)
+    po:
+      - [era:demonstrationSRT, "$(OPSidingTunnelParameter[@ID='ITU_EIDemonstration' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+  
+  siding-length: # 1.2.2.0.5.5
+    sources:
+      - OPSidingTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)_$(OPSidingTunnelIdentification/@Value)
+    po:
+      - [era:length,  "$(OPSidingTunnelParameter[@ID='ITU_Length' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+  
+  siding-emergency-plan: # 1.2.2.0.5.6
+    sources:
+      - OPSidingTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)_$(OPSidingTunnelIdentification/@Value)
+    po:
+      - p: era:hasEmergencyPlan
+        o:
+          value: "true"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter,"$(OPSidingTunnelParameter[@ID='ITU_EmergencyPlan' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:hasEmergencyPlan
+        o:
+          value: "false"
+          datatype: xsd:boolean
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingTunnelParameter[@ID='ITU_EmergencyPlan' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+  
+  siding-required-rolling-stock-fire-category: # 1.2.2.0.5.7
+    sources:
+      - OPSidingTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)_$(OPSidingTunnelIdentification/@Value)
+    po:
+      - p: era:rollingStockFireCategory
+        o: era-rsf:a~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter,"$(OPSidingTunnelParameter[@ID='ITU_FireCatReq' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] #A
+      - p: era:rollingStockFireCategory
+        o: era-rsf:b~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingTunnelParameter[@ID='ITU_FireCatReq' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] #B
+      - p: era:rollingStockFireCategory
+        o: era-rsf:none~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(OPSidingTunnelParameter[@ID='ITU_FireCatReq' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "30"] #none
+    graph: ${NAMED_GRAPH}
+
+  siding-required-national-rolling-stock-fire-category: # 1.2.2.0.5.8
+    sources:
+      - OPSidingTunnel-source
+    s: http://data.europa.eu/949/funtionalInfrastructure/tunnels/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPSidingIdentification/@Value)_$(OPSidingTunnelIdentification/@Value)
+    po:
+      - [era:nationalRollingStockFireCategory, "$(OPSidingTunnelParameter[@ID='ITU_NatFireCatReq' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}

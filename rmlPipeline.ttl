@@ -1,0 +1,89 @@
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+<> owl:imports <./node_modules/@ajuvercr/js-runner/ontology.ttl>,
+  <./node_modules/@ajuvercr/js-runner/channels/file.ttl>,
+  <./node_modules/@ajuvercr/js-runner/channels/http.ttl>,
+  <./rinf.ttl>,
+  <./node_modules/sds-processors/configs/yarrrml.ttl>,
+  <./node_modules/sds-processors/configs/stringManipulations.ttl>,
+  <./node_modules/rml-mapper-processor-ts/rmlMapper.ttl>,
+  <./GlobRead.ttl>.
+
+<> owl:imports </home/silvius/Projects/rml/rml-mapper-processor-ts/rmlMapper.ttl>.
+<countryChannel> a :HttpReaderChannel;
+  :httpPort 3333.
+
+<op-types> a :FileReaderChannel;
+  :fileOnReplace true;
+  :fileReadFirstContent true;
+  :filePath <./data/op-types.csv>.
+
+<countries> a :FileReaderChannel;
+  :fileOnReplace true;
+  :fileReadFirstContent true;
+  :filePath <./data/countries.csv>.
+
+<yml/reader> a js:JsReaderChannel.
+<yml/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <yml/reader>;
+  :writer <yml/writer>.
+
+<rml/reader> a js:JsReaderChannel.
+<rml/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <rml/reader>;
+  :writer <rml/writer>.
+
+<rml2/reader> a js:JsReaderChannel.
+<rml2/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <rml2/reader>;
+  :writer <rml2/writer>.
+
+<xml/reader> a js:JsReaderChannel.
+<xml/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <xml/reader>;
+  :writer <xml/writer>.
+
+[ ] a js:GlobRead;
+  js:glob <./mappings/*.yml>;
+  js:output <yml/writer>.
+
+[ ] a js:Y2R;
+  js:input <yml/reader>;
+  js:output <rml/writer>.
+
+[ ] a js:Substitute;
+  js:input <rml/reader>;
+  js:output <rml2/writer>;
+  js:source "${NAMED_GRAPH}";
+  js:replace "http://data.europa.eu/949/graph/rinf".
+
+[ ] a js:GetRINF2;
+  js:countries <countryChannel>;
+  js:dataOutput <xml/writer>.
+
+[ ] a js:RmlMapperReader;
+  js:mappings <rml2/reader>;
+  js:rmlSource [
+    js:sourceLocation 'dataset/data.xml';
+    js:input <xml/reader>;
+  ], [
+    js:sourceLocation "data/countries.csv";
+    js:input <countries>;
+  ], [
+    js:sourceLocation "data/op_types.csv";
+    js:input <op-types>;
+  ];
+  js:output <ttl-raw/writer>;
+  js:appendMapping true;
+  js:rmlJar <./rml-mapper-6.x.x.jar>.
+
+<ttl-raw/writer> a :FileWriterChannel;
+  :fileOnReplace true;
+  :filePath <./output.txt>.
+

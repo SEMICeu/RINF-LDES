@@ -1,0 +1,59 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  era: "http://data.europa.eu/949/"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+
+sources:
+  phaseinfo: ["dataset/data.xml~xpath","/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID='EOS_InfoPhase' and @IsApplicable='Y']"]
+mappings:
+  phase-information: # 1.1.1.2.4.1.2
+    sources:
+      - phaseinfo
+    s: "http://data.europa.eu/949/functionalInfrastructure/phaseInfo/$(parent::*/parent::SectionOfLine/SOLLineIdentification/@Value)_$(parent::*/parent::SectionOfLine/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::SectionOfLine/SOLOPEnd/@Value)_$(replace(replace(@Value,'[+]',''\),' ',''\))"
+    po:
+#      - [era:phaseInfo, "$(SOLTrackParameter[@ID='EOS_InfoPhase' and @IsApplicable='Y']/@Value)"]
+      - [a, era:PhaseInfo]
+      - [rdfs:label,$(@Value)]
+      - [era:phaseInfoLength,"$(substring-after(replace(tokenize(@Value,'\+'\)[1],' ',''\),'length'\))", xsd:integer] # integer
+#      - [era:phaseInfoSwitchOffBreaker,"$(substring-after(replace(tokenize(@Value,'\+'\)[2],' ',''\),'breaker'\))", xsd:boolean] # boolean
+#      - [era:phaseInfoPantographLowered, "$(substring-after(replace(tokenize(@Value,'\+'\)[3],' ',''\),'pantograph'\))", xsd:boolean] # boolean
+      - [era:phaseInfoKm, "$(substring-after(replace(tokenize(@Value,'\+'\)[4],' ',''\),'km'\))", xsd:double] # double
+      - p: era:phaseInfoSwitchOffBreaker
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(substring-after(replace(tokenize(@Value,'\+'\)[2],' ',''\),'breaker'\))"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:phaseInfoSwitchOffBreaker
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(substring-after(replace(tokenize(@Value,'\+'\)[2],' ',''\),'breaker'\))"]
+            - [grel:valueParameter2, "N"]
+      - p: era:phaseInfoPantographLowered
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(substring-after(replace(tokenize(@Value,'\+'\)[3],' ',''\),'pantograph'\))"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:phaseInfoPantographLowered
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(substring-after(replace(tokenize(@Value,'\+'\)[3],' ',''\),'pantograph'\))"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}

@@ -1,0 +1,421 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  era: "http://data.europa.eu/949/"
+  era-tds: "http://data.europa.eu/949/concepts/train-detection/rinf/"
+  era-tdssc: "http://data.europa.eu/949/concepts/train-detection-specific-checks/rinf/"
+  era-malvc: "http://data.europa.eu/949/concepts/min-axle-loads-per-vehicle-category/rinf/"
+  era-mas: "http://data.europa.eu/949/concepts/max-amount-sandings/rinf/"
+  era-tsi: "http://data.europa.eu/949/concepts/tsi-compliances/rinf/"
+
+
+sources:
+  tds-source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine/SOLTrack']
+  tds-fdl-source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID="CTD_TCLimitation" and @IsApplicable="Y"]']
+  tds-origin-source: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID='CTD_DetectionSystem' and @IsApplicable='Y']"]
+  minAxleLoadByVehicleCat-origin-source: ['dataset/data.xml~xpath',"/RINFData/SectionOfLine/SOLTrack/SOLTrackParameter[@ID='CTD_MinAxleLoadByVehicleCat' and @IsApplicable='Y']"]
+
+mappings:
+  train-detection-system: # 1.1.1.3.7.1.1
+    sources:
+      - tds-origin-source
+#    s: http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(UICCode)_$(FROM_NODE)_$(UUID)_$(TO_NODE)_$(GroupSet)
+#    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_DetectionSystem' and @IsApplicable='Y']/@Set)"
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)_$(@Set)"
+    po:
+      - [a, era:TrainDetectionSystem]
+      - [rdfs:label, $(@Set)]
+#      - [era:trainDetectionSystemType, "era-tds:$(SOLTrackParameter[@ID='CTD_DetectionSystem' and @IsApplicable='Y']/@Value)~iri"]
+      - [era:trainDetectionSystemType, "era-tds:$(@Value)~iri"]
+    graph: ${NAMED_GRAPH}
+
+  detection-system-specific-checks: # 1.1.1.3.7.1.2
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TCCheck' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:trainDetectionSystemSpecificCheck, "era-tdssc:$(SOLTrackParameter[@ID='CTD_TCCheck' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+
+  max-distance-tsi-compliant: # 1.1.1.3.7.2.1
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TSIMaxDistConsecutiveAxles' and @IsApplicable='Y']/@Set)"
+    po:
+#      - [era:tsiCompliantMaxDistConsecutiveAxles, era-tsi:$(ParameterValue)~iri]
+      - p: era:tsiCompliantMaxDistConsecutiveAxles
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIMaxDistConsecutiveAxles' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] # TSI_compliant
+      - p: era:tsiCompliantMaxDistConsecutiveAxles
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIMaxDistConsecutiveAxles' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] # not_TSI_compliant
+    graph: ${NAMED_GRAPH}
+
+  max-distance-consecutive-axles: # 1.1.1.3.7.2.2
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MaxDistConsecutiveAxles' and @IsApplicable='Y']/@Set)"
+    po:
+#      - [era:maxDistConsecutiveAxles, $(ParameterValue), xsd:integer]
+      - [era:maxDistConsecutiveAxles, "$(SOLTrackParameter[@ID='CTD_MaxDistConsecutiveAxles' and @IsApplicable='Y']/@Value)", xsd:integer]
+    graph: ${NAMED_GRAPH}
+
+  min-distance-consecutive-axles: # 1.1.1.3.7.3
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MinDistConsecutiveAxles' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:minDistConsecutiveAxles, "$(SOLTrackParameter[@ID='CTD_MinDistConsecutiveAxles' and @IsApplicable='Y']/@Value)", xsd:integer]
+    graph: ${NAMED_GRAPH}
+
+  minimum-distance-first-last-axle: # 1.1.1.3.7.4
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MinDistFirstLastAxles' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:minDistFirstLastAxle, "$(SOLTrackParameter[@ID='CTD_MinDistFirstLastAxles' and @IsApplicable='Y']/@Value)", xsd:integer]
+    graph: ${NAMED_GRAPH}
+
+  maximum-distance-end-train-first-axle: # 1.1.1.3.7.5
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MaxDistEndTrainFirstAxle' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:maxDistEndTrainFirstAxle, "$(SOLTrackParameter[@ID='CTD_MaxDistEndTrainFirstAxle' and @IsApplicable='Y']/@Value)", xsd:integer]
+    graph: ${NAMED_GRAPH}
+
+  minimum-rim-width: # 1.1.1.3.7.6
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MinRimWidth' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:minRimWidth, "$(SOLTrackParameter[@ID='CTD_MinRimWidth' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  minimum-wheel-diameter: # 1.1.1.3.7.7
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MinWheelDiameter' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:minWheelDiameter,  "$(SOLTrackParameter[@ID='CTD_MinWheelDiameter' and @IsApplicable='Y']/@Value)", xsd:integer]
+    graph: ${NAMED_GRAPH}
+
+  minimum-flange-thickness: # 1.1.1.3.7.8
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MinFlangeThickness' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:minFlangeThickness, "$(SOLTrackParameter[@ID='CTD_MinFlangeThickness' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  minimum-flange-height: # 1.1.1.3.7.9
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MinFlangeHeight' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:minFlangeHeight, "$(SOLTrackParameter[@ID='CTD_MinFlangeHeight' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  maximum-flange-height: # 1.1.1.3.7.10
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MaxFlangeHeight' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:maxFlangeHeight, "$(SOLTrackParameter[@ID='CTD_MaxFlangeHeight' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+#TODO
+  minimum-axle-load: # 1.1.1.3.7.11 was it removed? see rinf_application_guide_for_register_en.pdf
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MinAxleLoad' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:minAxleLoad, "$(SOLTrackParameter[@ID='CTD_MinAxleLoad' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+  min-axle-loads-vehicle-category: # 1.1.1.3.7.11.1
+    sources:
+      - minAxleLoadByVehicleCat-origin-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)_$(@Set)"
+    po:
+#      - [era:minAxleLoadVehicleCategory, "era-malvc:$(SOLTrackParameter[@ID='CTD_MinAxleLoadByVehicleCat' and @IsApplicable='Y']/@Value)~iri"]
+      - [era:tdsMinAxleLoadVehicleCategory,"http://data.europa.eu/949/functionalInfrastructure/min-axle-load-vehicle-categories/$(parent::*/parent::*/SOLLineIdentification/@Value)_$(parent::*/parent::*/SOLOPStart/@Value)_$(parent::*/SOLTrackIdentification/@Value)_$(parent::*/parent::*/SOLOPEnd/@Value)_$(@Set)~iri"]
+    graph: ${NAMED_GRAPH}
+
+
+  metal-free-space-tsi-compliant: # 1.1.1.3.7.12
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TSIMetalFree' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:tsiCompliantMetalFreeSpace
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIMetalFree' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] # TSI_compliant
+      - p: era:tsiCompliantMetalFreeSpace
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIMetalFree' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] # not_TSI_compliant
+    graph: ${NAMED_GRAPH}
+
+
+  metal-construction-tsi-compliant: # 1.1.1.3.7.13
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TSIMetalConstruction' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:tsiCompliantMetalConstruction
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIMetalConstruction' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] # TSI_compliant
+      - p: era:tsiCompliantMetalConstruction
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIMetalConstruction' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] # not_TSI_compliant
+    graph: ${NAMED_GRAPH}
+
+
+  ferromagnetic-wheel-tsi-compliant: # 1.1.1.3.7.14
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TSIFerroWheelMat' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:tsiCompliantFerromagneticWheel
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIFerroWheelMat' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] # TSI_compliant
+      - p: era:tsiCompliantFerromagneticWheel
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIFerroWheelMat' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] # not_TSI_compliant
+    graph: ${NAMED_GRAPH}
+
+
+  max-impedance-wheelset-tsi-compliant: # 1.1.1.3.7.15.1
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TSIMaxImpedanceWheelset' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:tsiCompliantMaxImpedanceWheelset
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIMaxImpedanceWheelset' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "10"] # TSI_compliant
+      - p: era:tsiCompliantMaxImpedanceWheelset
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIMaxImpedanceWheelset' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "20"] # not_TSI_compliant
+    graph: ${NAMED_GRAPH}
+
+  maximum-impedance-wheelset: # 1.1.1.3.7.15.2
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MaxImpedanceWheelset' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:maxImpedanceWheelset, "$(SOLTrackParameter[@ID='CTD_MaxImpedanceWheelset' and @IsApplicable='Y']/@Value)", xsd:double]
+    graph: ${NAMED_GRAPH}
+
+# TODO
+  sanding-tsi-compliant: # 1.1.1.3.7.16 was it removed? see rinf_application_guide_for_register_en.pdf
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MaxImpedanceWheelset' and @IsApplicable='Y']/@Set)"
+    po:
+     - [era:tsiCompliantSanding, "era-tsi:$(SOLTrackParameter[@ID='CTD_MaxImpedanceWheelset' and @IsApplicable='Y']/@Value)~iri"]
+    graph: ${NAMED_GRAPH}
+
+
+  maximum-sanding-output: # 1.1.1.3.7.17
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_MaxSandOutput' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:maxSandingOutput, "era-mas:$(SOLTrackParameter[@ID='CTD_MaxSandOutput' and @IsApplicable='Y']/@Value)~iri"] #TSI compliant when speed lower than 140km/h =10, check the RINF-lookupValues
+    graph: ${NAMED_GRAPH}
+
+  sand-driver-override: # 1.1.1.3.7.18
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_SandDriverOverride' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:requiredSandingOverride
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_SandDriverOverride' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:requiredSandingOverride
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_SandDriverOverride' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+  sand-characteristics-tsi-compliant: # 1.1.1.3.7.19
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TSISandCharacteristics' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:tsiCompliantSandCharacteristics
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [ grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSISandCharacteristics' and @IsApplicable='Y']/@Value)" ]
+            - [ grel:valueParameter2, "10" ] # TSI_compliant
+      - p: era:tsiCompliantSandCharacteristics
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [ grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSISandCharacteristics' and @IsApplicable='Y']/@Value)" ]
+            - [ grel:valueParameter2, "20" ] # not_TSI_compliant
+    graph: ${NAMED_GRAPH}
+
+  flange-lube-rules: # 1.1.1.3.7.20
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_FlangeLubeRules' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:flangeLubeRules
+        o:
+          value: "true"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_FlangeLubeRules' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "Y"]
+      - p: era:flangeLubeRules
+        o:
+          value: "false"
+          datatype: "xsd:boolean"
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_FlangeLubeRules' and @IsApplicable='Y']/@Value)"]
+            - [grel:valueParameter2, "N"]
+    graph: ${NAMED_GRAPH}
+
+
+  composite-brake-blocks-tsi-compliant: # 1.1.1.3.7.21
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TSICompositeBrakeBlocks' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:tsiCompliantCompositeBrakeBlocks
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [ grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSICompositeBrakeBlocks' and @IsApplicable='Y']/@Value)" ]
+            - [ grel:valueParameter2, "10" ] # TSI_compliant
+      - p: era:tsiCompliantCompositeBrakeBlocks
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [ grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSICompositeBrakeBlocks' and @IsApplicable='Y']/@Value)" ]
+            - [ grel:valueParameter2, "20" ] # not_TSI_compliant
+    graph: ${NAMED_GRAPH}
+
+
+  shunt-devices-tsi-compliant: # 1.1.1.3.7.22
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TSIShuntDevices' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:tsiCompliantShuntDevices
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [ grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIShuntDevices' and @IsApplicable='Y']/@Value)" ]
+            - [ grel:valueParameter2, "10" ] # TSI_compliant
+      - p: era:tsiCompliantShuntDevices
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [ grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIShuntDevices' and @IsApplicable='Y']/@Value)" ]
+            - [ grel:valueParameter2, "20" ] # not_TSI_compliant
+    graph: ${NAMED_GRAPH}
+
+
+  rst-shunt-impedance-tsi-compliant: # 1.1.1.3.7.23
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TSIRSTShuntImpedance' and @IsApplicable='Y']/@Set)"
+    po:
+      - p: era:tsiCompliantRSTShuntImpedance
+        o: era-tsi:TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [ grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIRSTShuntImpedance' and @IsApplicable='Y']/@Value)" ]
+            - [ grel:valueParameter2, "10" ] # TSI_compliant
+      - p: era:tsiCompliantRSTShuntImpedance
+        o: era-tsi:not_TSI_compliant~iri
+        condition:
+          function: idlab-fn:equal
+          parameters:
+            - [ grel:valueParameter, "$(SOLTrackParameter[@ID='CTD_TSIRSTShuntImpedance' and @IsApplicable='Y']/@Value)" ]
+            - [ grel:valueParameter2, "20" ] # not_TSI_compliant
+    graph: ${NAMED_GRAPH}
+
+  detection-system-specific-check-document: # 1.1.1.3.7.1.3
+    sources:
+      - tds-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::*/SOLLineIdentification/@Value)_$(parent::*/SOLOPStart/@Value)_$(SOLTrackIdentification/@Value)_$(parent::*/SOLOPEnd/@Value)_$(SOLTrackParameter[@ID='CTD_TCCheckDocRef' and @IsApplicable='Y']/@Set)"
+    po:
+      - [era:trainDetectionSystemSpecificCheckDocument, "$(SOLTrackParameter[@ID='CTD_TCCheckDocRef' and @IsApplicable='Y']/@Value)"]
+    graph: ${NAMED_GRAPH}
+
+  french-detection-limitation: # 1.1.1.3.7.1.4
+    sources:
+      - tds-fdl-source
+    s: "http://data.europa.eu/949/functionalInfrastructure/trainDetectionSystems/$(parent::SOLTrack/parent::*/SOLLineIdentification/@Value)_$(parent::SOLTrack/parent::*/SOLOPStart/@Value)_$(parent::SOLTrack/SOLTrackIdentification/@Value)_$(parent::SOLTrack/parent::*/SOLOPEnd/@Value)_$(@Set)"
+    po:
+#      - [era:frenchTrainDetectionSystemLimitation, "era-tds:$(replace(@Value,'[+]','_'\))~iri"]
+      - [era:tdsfrenchTrainDetectionSystemLimitation, "http://data.europa.eu/949/functionalInfrastructure/frenchTrainDetectionSystemLimitation/$(parent::SOLTrack/parent::*/SOLLineIdentification/@Value)_$(parent::SOLTrack/parent::*/SOLOPStart/@Value)_$(parent::SOLTrack/SOLTrackIdentification/@Value)_$(parent::SOLTrack/parent::*/SOLOPEnd/@Value)_$(@Set)~iri"]
+    graph: ${NAMED_GRAPH}

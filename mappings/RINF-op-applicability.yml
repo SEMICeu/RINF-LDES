@@ -1,0 +1,44 @@
+prefixes:
+  era: "http://data.europa.eu/949/"
+
+sources:
+  op_source-not-applicable: ['dataset/data.xml~xpath',"/RINFData/OperationalPoint/OPTrack/OPTrackParameter[@IsApplicable='N']"]
+  op_source-not-yet-available: ['dataset/data.xml~xpath',"/RINFData/OperationalPoint/OPTrack/OPTrackParameter[@IsApplicable='NYA']"]
+
+mappings:
+  op-tracks-not-applicable:
+    sources:
+      - op_source-not-applicable
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)
+    po:      
+      - p: era:notApplicable
+        o:
+          - mapping: index-predicates
+            condition:
+              function: equal
+              parameters:
+                - [str1, "$(@ID)"]
+                - [str2, $(xmlName)]
+    graph: ${NAMED_GRAPH}
+
+  op-tracks-not-yet-available:
+    sources:
+      - op_source-not-yet-available
+    s: http://data.europa.eu/949/functionalInfrastructure/tracks/$(parent::*/parent::*/UniqueOPID/@Value)_$(parent::*/OPTrackIdentification/@Value)
+    po:      
+      - p: era:notYetAvailable
+        o:
+          - mapping: index-predicates
+            condition:
+              function: equal
+              parameters:
+                - [str1, "$(@ID)"]
+                - [str2, $(xmlName)]
+    graph: ${NAMED_GRAPH}
+  
+  index-predicates:
+    sources:
+      - ["data/index_predicate_mappings.csv~csv"]
+    s: "$(predicate)"
+#    po:
+#      - [$(predicate),$(xmlName)]

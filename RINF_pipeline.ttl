@@ -1,15 +1,14 @@
-@prefix js: <https://w3id.org/conn/js#> .
-@prefix ws: <https://w3id.org/conn/ws#> .
-@prefix : <https://w3id.org/conn#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix rml: <https://w3id.org/conn/rml#> .
-@prefix ql: <http://semweb.mmlab.be/ns/ql#> .
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix ws: <https://w3id.org/conn/ws#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rml: <https://w3id.org/conn/rml#>.
+@prefix ql: <http://semweb.mmlab.be/ns/ql#>.
 
 <> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/http.ttl>.
 <> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/file.ttl>.
 <> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/kafka.ttl>.
-
 <> owl:imports <https://raw.githubusercontent.com/ajuvercr/rml-runner/master/ontology.ttl>.
 <> owl:imports <./rinf.ttl>.
 <> owl:imports <./../sds-processors/yarrrml.ttl>.
@@ -18,19 +17,15 @@
 <> owl:imports <./../sds-processors/ldesify.ttl>.
 <> owl:imports <./../rml-mapper-processor-ts/rmlMapper.ttl>.
 <> owl:imports <./../sds-storage-writer-mongo/step.ttl>.
-
-
 <countryChannel> a :HttpReaderChannel;
   :httpPort 3333.
 
-
-[] a js:JsChannel;
+[ ] a js:JsChannel;
   :reader <xml/reader>;
   :writer <xml/writer>.
 
 <xml/reader> a :JsReaderChannel.
 <xml/writer> a :JsWriterChannel.
-
 <yarrmls/track/reader> a :FileReaderChannel;
   :fileReadFirstContent "true";
   :fileOnReplace "true";
@@ -48,64 +43,81 @@
 
 <rml/op/writer> a :JsWriterChannel.
 <rml/op/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <rml/op/reader>; :writer <rml/op/writer>.
+[ ] a js:JsChannel;
+  :reader <rml/op/reader>;
+  :writer <rml/op/writer>.
 
 <rml/sol/writer> a :JsWriterChannel.
 <rml/sol/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <rml/sol/reader>; :writer <rml/sol/writer>.
+[ ] a js:JsChannel;
+  :reader <rml/sol/reader>;
+  :writer <rml/sol/writer>.
 
 <rml/track/writer> a :JsWriterChannel.
 <rml/track/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <rml/track/reader>; :writer <rml/track/writer>.
-
+[ ] a js:JsChannel;
+  :reader <rml/track/reader>;
+  :writer <rml/track/writer>.
 
 <ttl-raw/op/writer> a :JsWriterChannel.
 <ttl-raw/op/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <ttl-raw/op/reader>; :writer <ttl-raw/op/writer>.
+[ ] a js:JsChannel;
+  :reader <ttl-raw/op/reader>;
+  :writer <ttl-raw/op/writer>.
 
 <ttl-raw/sol/writer> a :JsWriterChannel.
 <ttl-raw/sol/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <ttl-raw/sol/reader>; :writer <ttl-raw/sol/writer>.
+[ ] a js:JsChannel;
+  :reader <ttl-raw/sol/reader>;
+  :writer <ttl-raw/sol/writer>.
 
 <ttl-raw/track/writer> a :JsWriterChannel.
 <ttl-raw/track/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <ttl-raw/track/reader>; :writer <ttl-raw/track/writer>.
-
+[ ] a js:JsChannel;
+  :reader <ttl-raw/track/reader>;
+  :writer <ttl-raw/track/writer>.
 
 <ldes-raw/writer> a :JsWriterChannel.
 <ldes-raw/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <ldes-raw/reader>; :writer <ldes-raw/writer>.
+[ ] a js:JsChannel;
+  :reader <ldes-raw/reader>;
+  :writer <ldes-raw/writer>.
 
 <sds-raw/writer> a :JsWriterChannel.
 <sds-raw/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <sds-raw/reader>; :writer <sds-raw/writer>.
-
+[ ] a js:JsChannel;
+  :reader <sds-raw/reader>;
+  :writer <sds-raw/writer>.
 
 <meta/buckets/reader> a :JsReaderChannel.
 <meta/buckets/writer> a :JsWriterChannel.
-[] a js:JsChannel; :reader <meta/buckets/reader>; :writer <meta/buckets/writer>.
+[ ] a js:JsChannel;
+  :reader <meta/buckets/reader>;
+  :writer <meta/buckets/writer>.
 
 <raw/buckets/reader> a :JsReaderChannel.
 <raw/buckets/writer> a :JsWriterChannel.
-[] a js:JsChannel; :reader <raw/buckets/reader>; :writer <raw/buckets/writer>.
+[ ] a js:JsChannel;
+  :reader <raw/buckets/reader>;
+  :writer <raw/buckets/writer>.
 
- [] a js:Y2R;
-   js:input <yarrmls/track/reader>;
-   js:output <rml/track/writer>.
+[ ] a js:Y2R;
+  js:input <yarrmls/track/reader>;
+  js:output <rml/track/writer>.
 
- [] a js:Y2R;
-   js:input <yarrmls/sol/reader>;
-   js:output <rml/sol/writer>.
+[ ] a js:Y2R;
+  js:input <yarrmls/sol/reader>;
+  js:output <rml/sol/writer>.
 
- [] a js:Y2R;
-   js:input <yarrmls/op/reader>;
-   js:output <rml/op/writer>.
+[ ] a js:Y2R;
+  js:input <yarrmls/op/reader>;
+  js:output <rml/op/writer>.
 
-[] a js:GetRINF2; 
-   js:countries <countryChannel>;
-   js:dataOutput <xml/writer>.
+[ ] a js:GetRINF2;
+  js:countries <countryChannel>;
+  js:dataOutput <xml/writer>.
 
-[] a js:RmlMapperReader;
+[ ] a js:RmlMapperReader;
   js:rml_data_input <xml/reader>;
   js:rml_mapping_reader <rml/track/reader>;
   js:rml_data_output <ttl-raw/track/writer>;
@@ -113,7 +125,7 @@
   rml:iterator "/RINFData//SOLTrack";
   rml:jarFile <./rml-mapper-6.x.x.jar>.
 
-[] a js:RmlMapperReader;
+[ ] a js:RmlMapperReader;
   js:rml_data_input <xml/reader>;
   js:rml_mapping_reader <rml/sol/reader>;
   js:rml_data_output <ttl-raw/sol/writer>;
@@ -121,7 +133,7 @@
   rml:iterator "/RINFData//SectionOfLine";
   rml:jarFile <./rml-mapper-6.x.x.jar>.
 
-[] a js:RmlMapperReader;
+[ ] a js:RmlMapperReader;
   js:rml_data_input <xml/reader>;
   js:rml_mapping_reader <rml/op/reader>;
   js:rml_data_output <ttl-raw/op/writer>;
@@ -129,43 +141,41 @@
   rml:iterator "/RINFData//OperationalPoint";
   rml:jarFile <./rml-mapper-6.x.x.jar>.
 
-[] a js:Ldesify;
+[ ] a js:Ldesify;
   js:input <ttl-raw/op/reader>;
   js:output <ldes-raw/writer>;
   js:path <./saves/op.json>.
 
-[] a js:Ldesify;
+[ ] a js:Ldesify;
   js:input <ttl-raw/sol/reader>;
   js:output <ldes-raw/writer>;
   js:path <./saves/sol.json>.
 
-[] a js:Ldesify;
+[ ] a js:Ldesify;
   js:input <ttl-raw/track/reader>;
   js:output <ldes-raw/writer>;
   js:path <./saves/track.json>.
 
-[] a js:Sdsify;
+[ ] a js:Sdsify;
   js:input <ldes-raw/reader>;
   js:output <sds-raw/writer>;
   js:stream <https://w3id.org/sds#Stream>.
-
 
 <metadata/in> a :FileReaderChannel;
   :fileReadFirstContent "true";
   :fileOnReplace "true";
   :filePath <./metadataIn.ttl>.
 
+[ ] a js:Bucketize;
+  js:dataInput <sds-raw/reader>;
+  js:metadataInput <metadata/in>;
+  js:dataOutput <raw/buckets/writer>;
+  js:metadataOutput <meta/buckets/writer>;
+  js:bucketizeStrategy <./bucketizeStrategy.ttl>;
+  js:inputStreamId <https://w3id.org/sds#Stream>;
+  js:outputStreamId <http://example.com/test>.
 
- [] a js:Bucketize;
-   js:dataInput <sds-raw/reader>;
-   js:metadataInput <metadata/in>;
-   js:dataOutput <raw/buckets/writer>;
-   js:metadataOutput <meta/buckets/writer>;
-   js:bucketizeStrategy <./bucketizeStrategy.ttl>;
-   js:inputStreamId <https://w3id.org/sds#Stream>;
-   js:outputStreamId <http://example.com/test>.
-
-[] a js:Ingest;
+[ ] a js:Ingest;
   js:dataInput <raw/buckets/reader>;
   js:metadataInput <meta/buckets/reader>;
   js:metadataCollection "RINF_META";
@@ -173,5 +183,4 @@
   js:indexCollection "RINF_INDEX";
   js:pageSize 150;
   js:databaseUrl "mongodb://localhost:27017/ldestest".
-  
 

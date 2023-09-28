@@ -1,0 +1,57 @@
+prefixes:
+  idlab-fn: "http://example.com/idlab/function/"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  eu-country: "http://publications.europa.eu/resource/authority/country/"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  era: "http://data.europa.eu/949/"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  era-linecat: "http://data.europa.eu/949/concepts/line-category/rinf/"
+  era-fc: "http://data.europa.eu/949/concepts/freight-corridor/rinf/"
+  
+sources:
+  nl-source: ['dataset/data.xml~xpath','/RINFData/SectionOfLine']
+  countries: ["data/countries.csv~csv"]
+mappings:
+  line-national-ids:
+    sources:
+      - nl-source
+    s: http://data.europa.eu/949/functionalInfrastructure/nationalLines/$(SOLLineIdentification/@Value)
+    po:
+      - [a, era:NationalRailwayLine]
+      - [rdfs:label, "$(SOLLineIdentification/@Value)"]
+      - p: era:inCountry
+        o:
+          - mapping: eu-country
+            condition:
+              function: equal
+              parameters:
+                - [str1, "$(parent::*/MemberStateCode/@Code)"]
+                - [str2, $(code)]
+#      - [era:lineCategory, "era-linecat:$(SOLTrack/SOLTrackParameter[@ID='IPP_LineCat' and @IsApplicable='Y']/@Value)~iri"] #  line-categories: # 1.1.1.1.2.2
+    graph: ${NAMED_GRAPH}
+    
+  eu-country:
+    sources:
+      - countries
+    s: $(eu)
+
+#  line-categories: # 1.1.1.1.2.2
+#    sources:
+#      - nl-source
+#    s: http://data.europa.eu/949/functionalInfrastructure/nationalLines/$(SOLLineIdentification/@Value)
+#    po:
+#      - [era:lineCategory, "era-linecat:$(SOLTrack/SOLTrackParameter[@ID='IPP_LineCat' and @IsApplicable='Y']/@Value)~iri"]
+#    graph: ${NAMED_GRAPH}
+
+
+
+# It was moved to sol-tracks Issue LD4RAIL-430
+
+#  freight-corridor: # 1.1.1.1.2.3
+#    sources:
+#      - nl-source-freight-corridor
+#    s: http://data.europa.eu/949/functionalInfrastructure/nationalLines/$(parent::*/parent::*/SOLLineIdentification/@Value)
+#    po:
+#      - [era:freightCorridor, "era-fc:$(@Value)~iri"]
+#    graph: ${NAMED_GRAPH}
+#
