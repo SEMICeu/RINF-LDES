@@ -1,0 +1,161 @@
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+<> owl:imports <./node_modules/@ajuvercr/js-runner/ontology.ttl>,
+  <./node_modules/@ajuvercr/js-runner/channels/file.ttl>,
+  <./node_modules/@ajuvercr/js-runner/channels/http.ttl>,
+  <./rinf.ttl>,
+  <./node_modules/sds-processors/configs/yarrrml.ttl>,
+  <./node_modules/sds-processors/configs/stringManipulations.ttl>,
+  <./node_modules/rml-mapper-processor-ts/rmlMapper.ttl>,
+  <./GlobRead.ttl>.
+
+<countryChannel> a :HttpReaderChannel;
+  :httpPort 3333.
+
+<op-types> a :FileReaderChannel;
+  :fileOnReplace true;
+  :fileReadFirstContent true;
+  :filePath <./data/op-types.csv>.
+
+<countries> a :FileReaderChannel;
+  :fileOnReplace true;
+  :fileReadFirstContent true;
+  :filePath <./data/countries.csv>.
+
+<yml/reader> a js:JsReaderChannel.
+<yml/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <yml/reader>;
+  :writer <yml/writer>.
+
+<rml/reader> a js:JsReaderChannel.
+<rml/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <rml/reader>;
+  :writer <rml/writer>.
+
+<rml2/reader> a js:JsReaderChannel.
+<rml2/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <rml2/reader>;
+  :writer <rml2/writer>.
+
+[ ] a js:GlobRead;
+  js:glob <./mappings/*.yml>;
+  js:output <yml/writer>.
+
+[ ] a js:Y2R;
+  js:input <yml/reader>;
+  js:output <rml/writer>.
+
+[ ] a js:Substitute;
+  js:input <rml/reader>;
+  js:output <rml2/writer>;
+  js:source "${NAMED_GRAPH}";
+  js:replace "http://data.europa.eu/949/graph/rinf".
+
+[ ] a js:GetRINF2;
+  js:countries <countryChannel>;
+  js:dataOutput <xml/writer>.
+
+<xml/reader> a :HttpReaderChannel;
+  :httpPort 3334.
+
+<xml/writer> a :HttpWriterChannel;
+  :httpMethod "POST";
+  :httpEndpoint "127.0.0.1:3334".
+
+[ ] a js:RmlMapperReader;
+  js:mappings <rml2/reader>;
+  js:rmlSource [
+    js:sourceLocation 'dataset/data.xml';
+    js:input <xml/reader>;
+  ], [
+    js:sourceLocation "data/countries.csv";
+    js:input <countries>;
+  ], [
+    js:sourceLocation "data/op_types.csv";
+    js:input <op-types>;
+  ];
+  js:output <ttl-raw/writer>;
+  js:appendMapping true;
+  js:rmlJar <./rml-mapper-6.x.x.jar>.
+
+[ ] a :FileChannel;
+  :reader <data>;
+  :writer <ttl-raw/writer>.
+
+<ttl-raw/writer> a :FileWriterChannel;
+  :fileOnReplace true;
+  :filePath <./output.txt>.
+
+<> owl:imports <./node_modules/sds-processors/configs/sdsify.ttl>,
+  <./node_modules/sds-processors/configs/bucketizer.ttl>,
+  <./node_modules/sds-processors/configs/ldesify.ttl>,
+  <./node_modules/@treecg/sds-storage-writer-mongo/step.ttl>.
+
+<data> a :FileReaderChannel;
+  :fileOnReplace true;
+  :filePath <./output.txt>.
+
+<ldes-raw/reader> a js:JsReaderChannel.
+<ldes-raw/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <ldes-raw/reader>;
+  :writer <ldes-raw/writer>.
+
+<sds-raw/reader> a js:JsReaderChannel.
+<sds-raw/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <sds-raw/reader>;
+  :writer <sds-raw/writer>.
+
+[ ] a js:Ldesify;
+  js:input <data>;
+  js:output <ldes-raw/writer>;
+  js:path <./save.json>.
+
+[ ] a js:Sdsify;
+  js:input <ldes-raw/reader>;
+  js:output <sds-raw/writer>;
+  js:stream <https://w3id.org/sds#Stream>.
+
+<metadata/in> a :FileReaderChannel;
+  :fileReadFirstContent "true";
+  :fileOnReplace "true";
+  :filePath <./metadataIn.ttl>.
+
+[ ] a js:Bucketize;
+  js:dataInput <sds-raw/reader>;
+  js:metadataInput <metadata/in>;
+  js:dataOutput <buckets/writer>;
+  js:metadataOutput <meta/buckets/writer>;
+  js:bucketizeStrategy <./bucketizeStrategy.ttl>;
+  js:inputStreamId <https://w3id.org/sds#Stream>;
+  js:outputStreamId <http://example.com/test>.
+
+<meta/buckets/reader> a js:JsReaderChannel.
+<meta/buckets/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <meta/buckets/reader>;
+  :writer <meta/buckets/writer>.
+
+<buckets/reader> a js:JsReaderChannel.
+<buckets/writer> a js:JsWriterChannel.
+[ ] a js:JsChannel;
+  :reader <buckets/reader>;
+  :writer <buckets/writer>.
+
+[ ] a js:Ingest;
+  js:dataInput <buckets/reader>;
+  js:metadataInput <meta/buckets/reader>;
+  js:database [
+    js:url "mongodb://127.0.0.1:27017/rinftest";
+    js:metadata "META";
+    js:data "DATA";
+    js:index "INDEX";
+  ];
+  js:indexCollection true.
+
